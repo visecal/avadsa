@@ -20,6 +20,11 @@ from urllib.parse import unquote
 from typing import List, Dict, Optional
 from typing import List, Dict, Optional
 
+# Application info
+APP_NAME = "Auto VEO3 by Fath"
+APP_VERSION = "2.0"
+APP_SUBTITLE = "Công cụ tạo Video & Ảnh AI tự động từ Google Labs"
+
 FLOW_CONFIG = {
     "image_models": [
         {
@@ -3098,7 +3103,7 @@ class AccountManager(QMainWindow):
         self.loading_config = False
 
     def init_ui(self):
-        self.setWindowTitle("Auto VEO3 by Fath - Công cụ tạo Video & Ảnh AI tự động")
+        self.setWindowTitle(f"{APP_NAME} - {APP_SUBTITLE}")
         self.resize(1700, 950)
         
         central_widget = QWidget()
@@ -3176,12 +3181,12 @@ class AccountManager(QMainWindow):
         title_layout = QVBoxLayout()
         title_layout.setSpacing(0)
         
-        app_name = QLabel("Auto VEO3 by Fath")
+        app_name = QLabel(APP_NAME)
         app_name.setObjectName("appTitle")
         app_name.setStyleSheet("font-size: 22px; font-weight: bold; color: #ffffff; margin: 0;")
         title_layout.addWidget(app_name)
         
-        subtitle = QLabel("Công cụ tạo Video & Ảnh AI tự động từ Google Labs")
+        subtitle = QLabel(APP_SUBTITLE)
         subtitle.setStyleSheet("font-size: 12px; color: rgba(255,255,255,0.8); margin: 0;")
         title_layout.addWidget(subtitle)
         
@@ -3214,7 +3219,7 @@ class AccountManager(QMainWindow):
         layout = QHBoxLayout(footer)
         layout.setContentsMargins(20, 5, 20, 5)
         
-        version_label = QLabel("v2.0")
+        version_label = QLabel(f"v{APP_VERSION}")
         version_label.setStyleSheet("color: #6b7280; font-size: 11px;")
         layout.addWidget(version_label)
         
