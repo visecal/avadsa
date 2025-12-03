@@ -8180,15 +8180,143 @@ class ResultTable(QWidget):
             if i < self.table.columnCount():
                 self.table.setColumnWidth(i, width)
 
+class KeyVerificationDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Xác thực bản quyền - Auto VEO3")
+        
+        # SỬA LỖI: Thay vì setFixedSize(400, 180), ta chỉ set chiều rộng tối thiểu
+        # Chiều cao sẽ tự động giãn ra cho đủ nội dung
+        self.setMinimumWidth(450)
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
+        
+        layout = QVBoxLayout()
+        layout.setSpacing(15)
+        layout.setContentsMargins(25, 25, 25, 25)
+
+        # Title
+        title = QLabel("🔐 Nhập License Key")
+        title.setStyleSheet("font-size: 18px; font-weight: bold; color: #1e293b;")
+        title.setAlignment(Qt.AlignCenter)
+        layout.addWidget(title)
+
+        # Input
+        self.key_input = QLineEdit()
+        self.key_input.setPlaceholderText("Dán key của bạn vào đây...")
+        # SỬA LỖI: Thêm min-height để ô nhập không bị bẹp dúm
+        self.key_input.setStyleSheet("""
+            QLineEdit {
+                padding: 10px 15px;
+                border: 2px solid #e2e8f0;
+                border-radius: 8px;
+                font-size: 14px;
+                min-height: 25px; /* Đảm bảo chiều cao tối thiểu */
+            }
+            QLineEdit:focus {
+                border-color: #6366f1;
+            }
+        """)
+        layout.addWidget(self.key_input)
+
+        # Button
+        self.check_btn = QPushButton("Kiểm tra & Đăng nhập")
+        self.check_btn.setCursor(Qt.PointingHandCursor)
+        # SỬA LỖI: Thêm min-height cho nút bấm đẹp hơn
+        self.check_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #3b82f6, stop:1 #2563eb);
+                color: white;
+                padding: 12px;
+                border-radius: 8px;
+                font-weight: bold;
+                font-size: 14px;
+                border: none;
+                min-height: 25px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #2563eb, stop:1 #1d4ed8);
+            }
+            QPushButton:disabled {
+                background-color: #94a3b8;
+            }
+        """)
+        self.check_btn.clicked.connect(self.verify_key)
+        layout.addWidget(self.check_btn)
+
+        self.status_label = QLabel("")
+        self.status_label.setAlignment(Qt.AlignCenter)
+        # Set font size cho status để dễ đọc
+        self.status_label.setStyleSheet("font-size: 13px; font-weight: 500;")
+        layout.addWidget(self.status_label)
+
+        # Thêm khoảng trống co giãn ở dưới cùng để đẩy nội dung lên trên đẹp mắt
+        layout.addStretch()
+
+        self.setLayout(layout)
+        
+        # Tự động điều chỉnh kích thước cửa sổ cho vừa khít nội dung
+        self.adjustSize()
+
+    def verify_key(self):
+        user_key = self.key_input.text().strip()
+        if not user_key:
+            self.status_label.setText("⚠️ Vui lòng nhập key!")
+            self.status_label.setStyleSheet("color: #d97706; font-size: 13px; font-weight: 500;")
+            return
+
+        self.check_btn.setEnabled(False)
+        self.check_btn.setText("Đang kết nối server...")
+        self.status_label.setText("Vui lòng đợi giây lát...")
+        self.status_label.setStyleSheet("color: #475569; font-size: 13px;")
+        QApplication.processEvents()
+
+        url = "https://gist.githubusercontent.com/visecal/0bbdfc4abf1007f2f73fb6e13060bb66/raw/7ab11ddf5b2e5d645ffc74a93a0bf5068ddb3526/gistfile1.txt"
+
+        try:
+            # Thêm random param để tránh cache
+            response = requests.get(f"{url}?t={int(time.time())}", timeout=15)
+            
+            if response.status_code == 200:
+                valid_keys = [line.strip() for line in response.text.splitlines() if line.strip()]
+                
+                if user_key in valid_keys:
+                    self.status_label.setText("✅ Key chính xác! Đang vào...")
+                    self.status_label.setStyleSheet("color: #10b981; font-weight: bold;")
+                    QApplication.processEvents()
+                    time.sleep(0.8)
+                    self.accept()
+                else:
+                    self.status_label.setText("❌ Key không hợp lệ!")
+                    self.status_label.setStyleSheet("color: #ef4444; font-weight: bold;")
+            else:
+                self.status_label.setText(f"❌ Lỗi Server: {response.status_code}")
+                self.status_label.setStyleSheet("color: #ef4444;")
+
+        except Exception as e:
+            self.status_label.setText("❌ Không có kết nối mạng!")
+            self.status_label.setStyleSheet("color: #ef4444;")
+            print(e)
+        
+        finally:
+            self.check_btn.setEnabled(True)
+            if self.result() != QDialog.Accepted:
+                self.check_btn.setText("Kiểm tra & Đăng nhập")
+
 def main():
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
 
-    window = AccountManager()
-    window.show()
-
-    # Trả lại mã thoát của Qt, phần thoát hẳn process xử lý bên dưới
-    return app.exec()
+    # --- BẮT ĐẦU ĐOẠN CODE KIỂM TRA KEY ---
+    login_dialog = KeyVerificationDialog()
+    if login_dialog.exec() == QDialog.Accepted:
+        # Nếu nhập đúng key thì mới khởi tạo cửa sổ chính
+        window = AccountManager()
+        window.show()
+        return app.exec()
+    else:
+        # Nếu tắt bảng nhập key hoặc nhập sai mà thoát
+        return 0
+    # --- KẾT THÚC ĐOẠN CODE KIỂM TRA KEY ---
 
 if __name__ == '__main__':
     main()
