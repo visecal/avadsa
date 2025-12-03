@@ -1,0 +1,52 @@
+{
+    "image_model": "Imagen 4",
+    "image_ratio": "16:9",
+    "image_count": 1,
+    "video_model": "Veo 3.1 Fast",
+    "threads": 1,
+    "prompt_delay": 0.5,
+    "task_timeout_seconds": 30,
+    "output_folder": "C:\\Users\\Administrator\\Desktop\\New folder\\veo3tool-main\\output",
+    "upscale": false,
+    "direct_project": true,
+    "chrome_profile": "",
+    "headless": false,
+    "hide_browser": false,
+    "table_columns": [
+        40,
+        50,
+        260,
+        140,
+        110,
+        80,
+        110,
+        140,
+        150,
+        65,
+        0
+    ],
+    "account_table_columns": [
+        100,
+        100,
+        100,
+        139,
+        670
+    ],
+    "main_splitter": [
+        919,
+        656
+    ],
+    "right_splitter": [
+        743,
+        316
+    ],
+    "accounts": [
+        {
+            "type": "cookie",
+            "cookie": "[\n  {\n    \"domain\": \".labs.google\",\n    \"expirationDate\": 1799354659.413346,\n    \"hostOnly\": false,\n    \"httpOnly\": false,\n    \"name\": \"_ga\",\n    \"path\": \"/\",\n    \"sameSite\": \"unspecified\",\n    \"secure\": false,\n    \"session\": false,\n    \"storeId\": \"0\",\n    \"value\": \"GA1.1.604681677.1764757792\"\n  },\n  {\n    \"domain\": \"labs.google\",\n    \"expirationDate\": 1767349797,\n    \"hostOnly\": true,\n    \"httpOnly\": false,\n    \"name\": \"EMAIL\",\n    \"path\": \"/\",\n    \"sameSite\": \"unspecified\",\n    \"secure\": false,\n    \"session\": false,\n    \"storeId\": \"0\",\n    \"value\": \"%22hte%40creakertop.io.vn%22\"\n  },\n  {\n    \"domain\": \"labs.google\",\n    \"hostOnly\": true,\n    \"httpOnly\": true,\n    \"name\": \"__Secure-next-auth.callback-url\",\n    \"path\": \"/\",\n    \"sameSite\": \"lax\",\n    \"secure\": true,\n    \"session\": true,\n    \"storeId\": \"0\",\n    \"value\": \"https%3A%2F%2Flabs.google\"\n  },\n  {\n    \"domain\": \"labs.google\",\n    \"hostOnly\": true,\n    \"httpOnly\": true,\n    \"name\": \"__Host-next-auth.csrf-token\",\n    \"path\": \"/\",\n    \"sameSite\": \"lax\",\n    \"secure\": true,\n    \"session\": true,\n    \"storeId\": \"0\",\n    \"value\": \"78c80bed7f827a455dc329a1bb25bcf57a56ae22ebae5e3ddff5e54bffb20a8c%7C9b1635a671361b58973e147dbcf79142407e2120a2a82fca7b93f03383c6f0f2\"\n  },\n  {\n    \"domain\": \".labs.google\",\n    \"expirationDate\": 1799354656.183041,\n    \"hostOnly\": false,\n    \"httpOnly\": false,\n    \"name\": \"_ga_X5V89YHGSH\",\n    \"path\": \"/\",\n    \"sameSite\": \"unspecified\",\n    \"secure\": false,\n    \"session\": false,\n    \"storeId\": \"0\",\n    \"value\": \"GS2.1.s1764794655$o2$g0$t1764794656$j59$l0$h0\"\n  },\n  {\n    \"domain\": \".labs.google\",\n    \"expirationDate\": 1799354658.734692,\n    \"hostOnly\": false,\n    \"httpOnly\": false,\n    \"name\": \"_ga_5K7X2T4V16\",\n    \"path\": \"/\",\n    \"sameSite\": \"unspecified\",\n    \"secure\": false,\n    \"session\": false,\n    \"storeId\": \"0\",\n    \"value\": \"GS2.1.s1764794657$o2$g0$t1764794658$j59$l0$h0\"\n  },\n  {\n    \"domain\": \".labs.google\",\n    \"expirationDate\": 1799354659.634489,\n    \"hostOnly\": false,\n    \"httpOnly\": false,\n    \"name\": \"_ga_X2GNH8R5NS\",\n    \"path\": \"/\",\n    \"sameSite\": \"unspecified\",\n    \"secure\": false,\n    \"session\": false,\n    \"storeId\": \"0\",\n    \"value\": \"GS2.1.s1764792304$o5$g1$t1764794659$j11$l0$h1858407928\"\n  },\n  {\n    \"domain\": \"labs.google\",\n    \"expirationDate\": 1767386660.745291,\n    \"hostOnly\": true,\n    \"httpOnly\": true,\n    \"name\": \"__Secure-next-auth.session-token\",\n    \"path\": \"/\",\n    \"sameSite\": \"lax\",\n    \"secure\": true,\n    \"session\": false,\n    \"storeId\": \"0\",\n    \"value\": \"eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..3RqJu5pghMBYAKGC.hNGQjAX16ZCxz5acLQl8JEygQ9MzQOSasEmzf28x4tBOpd0VGKkbpkBj7gn8_5920Q-MYSt2B_eF2TxKBotxL0NnhSbniC_vM3qm9LkYMkmDZjm9y7blJ62ev88S6Ic53LIiMl5gJXRd2g4oma38-qhNYrj1xXZ7M7g3-AnxNF0VItEKFZJfhvo2D7ZDgNRRct4a2ywST2-NzRnny5_I49ui_HTuoijYdEPeQNE4Yl5PAHI_dfbfYc0K6Pi0lNqgV0ndU8vODMoubkLFLPxkx0GsbIfCxxjSxrD4A2K29D1a4qN0rbd8PMlD9i7PegLGzrwMzh5kyvo4LHECyXZdCMzWgCdv8fiSB7c4nAXifq4qnIdBQDsc_qyq9xClcJ16shnnEnN5UpaiHNAmKrCyp0sB7sE6Ua4VOixDBCkDb0aOIOezBobY30qjr2YEyQXWPcg5g2cRhZRVXe3giXYd0954RiQlES_dFr8E3c103UVFTb-ob564N2xQAU2sB_WeraJKd4HmGgc54XPXJRvx2549yv9poZ03C8hlUCnrk8fc71Bo9oYNxXZo9gAPkD69Mj-HzODREtOO6YiY0WGaUoFS6r_FBU7CpV3ZkYaIn3sxWTlcPvFvcIQMeuHr2ivfT9SRuDvyoaM9PbHwspqBp5vAReICosKn4bZHGLcDY5XQZaRwZffORS0pvxKo0jYvtnZR3n0pzCo3oLTf34onIdpXQzFUKtyrYYONlL8Pt0esaqej3P-TnVfVXhmGFdCfyWNaqftQj_iSVnS4-nHIrt9-qW3cNBRXdGDRV5gJPT7-ma7_eh_irPlNFOpTk5tzBa88m1amxDITacKqvbq3EnbRR6hPn5u1pkJEHP5HKr-2csADth_MRY5wumtwcVPDKjRmwNTOR-L6o9hQ-Xuvgmacwk40HCNPgkwoU9wtpggBgyKyWsY7xHEwRkXHcpsN4x94WLOGrMHkdm8yES-9bxk.kWTZveTOBoaH_sjLbEZJAQ\"\n  }\n]",
+            "profile_dir": "C:\\Users\\Administrator\\Desktop\\New folder\\veo3tool-main\\browser_profiles\\htecreakertopiovn",
+            "email": "hte@creakertop.io.vn",
+            "project_link": "https://labs.google/fx/vi/tools/flow/project/959e3444-b8dd-44fa-b662-7e3b96e7a63d"
+        }
+    ]
+}
