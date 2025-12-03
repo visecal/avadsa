@@ -1,0 +1,52 @@
+{
+    "image_model": "Imagen 4",
+    "image_ratio": "16:9",
+    "image_count": 1,
+    "video_model": "Veo 3.1 Fast",
+    "threads": 3,
+    "prompt_delay": 0.5,
+    "task_timeout_seconds": 30,
+    "output_folder": "C:\\Users\\Administrator\\Desktop\\New folder\\veo3tool-main\\output",
+    "upscale": false,
+    "direct_project": true,
+    "chrome_profile": "",
+    "headless": false,
+    "hide_browser": false,
+    "table_columns": [
+        40,
+        50,
+        260,
+        140,
+        110,
+        80,
+        110,
+        140,
+        150,
+        65,
+        0
+    ],
+    "account_table_columns": [
+        100,
+        100,
+        100,
+        100,
+        260
+    ],
+    "main_splitter": [
+        919,
+        656
+    ],
+    "right_splitter": [
+        587,
+        250
+    ],
+    "accounts": [
+        {
+            "type": "cookie",
+            "cookie": "[\n    {\n        \"domain\": \"labs.google\",\n        \"hostOnly\": true,\n        \"httpOnly\": true,\n        \"name\": \"__Host-next-auth.csrf-token\",\n        \"path\": \"/\",\n        \"sameSite\": \"lax\",\n        \"secure\": true,\n        \"session\": true,\n        \"storeId\": null,\n        \"value\": \"1770e936a8c0a0a2228829c172ed84cc0167b79bc8af80b0939ce0eaabfda770%7C0ef8aae91d0d135549bbc12e7b4eb944d752158b104592259dd7e51b6132b139\"\n    },\n    {\n        \"domain\": \"labs.google\",\n        \"hostOnly\": true,\n        \"httpOnly\": true,\n        \"name\": \"__Secure-next-auth.callback-url\",\n        \"path\": \"/\",\n        \"sameSite\": \"lax\",\n        \"secure\": true,\n        \"session\": true,\n        \"storeId\": null,\n        \"value\": \"https%3A%2F%2Flabs.google%2Ffx\"\n    },\n    {\n        \"domain\": \"labs.google\",\n        \"expirationDate\": 1767380684.14976,\n        \"hostOnly\": true,\n        \"httpOnly\": true,\n        \"name\": \"__Secure-next-auth.session-token\",\n        \"path\": \"/\",\n        \"sameSite\": \"lax\",\n        \"secure\": true,\n        \"session\": false,\n        \"storeId\": null,\n        \"value\": \"eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..AUHc-yYD7FxF5AAr.VPuF593UVZxFBecfpHxXLvOIpTM5wOPL-TZzMuSDDWq5-GcsTfeSEXfq66hxVDxRt7F2iXvyjMQQ4WFKOSY9xusUk4ZHyRcEM38NN7UOq1vfFaiQFmj_hVxXbl8XjA3DFseSDSN6_IUwPW1BVe3ffZaHoblLlvxk99xhXkLQPfIGnerODDjHUvlkMFnakZVW9zSpg4mw50FmWkTFFKBBOLsp-_gz7CfRryYO8WZaTVFYfJh9aH_N7CciNu0gDd9zo_GCpKIiXhhhP8H7Q5RxcljmMqFY2wc7fOx1uXPw8ajJKbytNIN6WrIyhCoRlvD91yv_fqPUb97HK3QSYIP4Pox0vlRQvaEQrEhoyuMO0BcfvzUOYTCZvB46yk3n5zTatnxoRKNN_rbUVBASZBpuK25PvmqQg_VQWCAvie95GqZ0gP9EpH2L7nmDdkVUglzEdqzIvhCmiETJ7M_ePb9r8Wsxjq0OI0hWgB18I8Ft_dpggzrmHU-RE6APcaNnDH7_qcyKjTiUA--58muIKYnd2zhpNP5M_YV69AN3LJ2P2waj6ZjIOihJqFjBP601ziP-nSV-Z_STzS6AME-wmKR9_YfWquNcw3LaYpmvahSZdWVBE5ubXejgmhPz2v9ACm-nuEz6wbhsUGmkDY7gkzOL2-_tB9VK_WO7Kv3WkCbKMiE0VWqudBfkwy9bCcoIS-Z7zT-qHX4SKNt0FBH4NT8Orqp2eysEH--ZkZNDUq1ZYjRCXrGOcx6s3Ud2akxksD7nh638aTJ138vrSSabf618QcSyi_GGcdf6sIhNVHsRPa2uMdAwizr5wNVMwyBKwjeDQsS3Aqh9cONURD3wQLbY96q2oGtxd3s_0GnXWvBgGL_F1sx_aMKy7_3n1d6tL_wwdh21vgv6jCsFcUWC0km-_tQ7nH-57Y8l2a1Wdz2TbSAj4q6RjmTjxxDMCD9ara1AqRVCWAmpgQYb1qOCMA1L1mIzNGBbYVXLwXGu89GC9Q.6v6Sl68oa4SKUhONtI72MA\"\n    }\n]",
+            "profile_dir": "C:\\Users\\Administrator\\Desktop\\New folder\\veo3tool-main\\browser_profiles\\Account1",
+            "email": "hoquangtruongctld3@gmail.com",
+            "project_link": "https://labs.google/fx/vi/tools/flow/project/8c37b3ba-d0ce-4455-9e83-5c945a057637"
+        }
+    ]
+}
