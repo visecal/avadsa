@@ -3062,16 +3062,21 @@ class WorkerThread(QThread):
             pass
 
 class GeminiAPIManager:
-    """Singleton để quản lý API key và gọi Gemini API"""
-    _instance = None
+    """Class quản lý API key và gọi Gemini API (sử dụng class methods)"""
     _api_key = ""
     _model = "gemini-2.5-flash"
+    _genai_module = None  # Cache the import
     
     @classmethod
-    def get_instance(cls):
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
+    def _get_genai(cls):
+        """Lazy import và cache google.generativeai module"""
+        if cls._genai_module is None:
+            try:
+                import google.generativeai as genai
+                cls._genai_module = genai
+            except ImportError:
+                return None
+        return cls._genai_module
     
     @classmethod
     def set_api_key(cls, key):
@@ -3095,8 +3100,11 @@ class GeminiAPIManager:
         if not cls._api_key:
             return None, "Chưa cài đặt API Key Gemini. Vui lòng vào tab Cài Đặt API để nhập key."
         
+        genai = cls._get_genai()
+        if genai is None:
+            return None, "Thư viện google-generativeai chưa được cài đặt. Vui lòng cài đặt bằng lệnh: pip install google-generativeai"
+        
         try:
-            import google.generativeai as genai
             genai.configure(api_key=cls._api_key)
             
             model = genai.GenerativeModel(cls._model)
@@ -3108,8 +3116,6 @@ class GeminiAPIManager:
             
             response = model.generate_content(full_prompt)
             return response.text, None
-        except ImportError:
-            return None, "Thư viện google-generativeai chưa được cài đặt. Vui lòng cài đặt bằng lệnh: pip install google-generativeai"
         except Exception as e:
             return None, f"Lỗi gọi Gemini API: {str(e)}"
     
@@ -3119,8 +3125,11 @@ class GeminiAPIManager:
         if not cls._api_key:
             return None, "Chưa cài đặt API Key Gemini. Vui lòng vào tab Cài Đặt API để nhập key."
         
+        genai = cls._get_genai()
+        if genai is None:
+            return None, "Thư viện google-generativeai chưa được cài đặt. Vui lòng cài đặt bằng lệnh: pip install google-generativeai"
+        
         try:
-            import google.generativeai as genai
             genai.configure(api_key=cls._api_key)
             
             model = genai.GenerativeModel(cls._model)
@@ -3135,12 +3144,16 @@ Kết quả là văn bản thuần túy, KHÔNG thêm lời dẫn, chú thích, 
             else:
                 full_prompt = default_prompt
             
+            # Gemini 1.5+ có thể xử lý YouTube URLs trực tiếp
+            # Gửi URL như một phần của content
             response = model.generate_content([youtube_url, full_prompt])
             return response.text, None
-        except ImportError:
-            return None, "Thư viện google-generativeai chưa được cài đặt. Vui lòng cài đặt bằng lệnh: pip install google-generativeai"
         except Exception as e:
-            return None, f"Lỗi phân tích YouTube: {str(e)}"
+            error_msg = str(e)
+            # Cung cấp hướng dẫn hữu ích nếu có lỗi
+            if "not supported" in error_msg.lower() or "invalid" in error_msg.lower():
+                return None, f"Lỗi: Model {cls._model} có thể không hỗ trợ phân tích video trực tiếp. Thử đổi sang gemini-1.5-flash-latest hoặc gemini-1.5-pro-latest. Chi tiết: {error_msg}"
+            return None, f"Lỗi phân tích YouTube: {error_msg}"
 
 
 class GeminiWorker(QThread):
@@ -3819,10 +3832,14 @@ class YouTubeAnalysisTab(QWidget):
     
     def validate_youtube_url(self, url):
         """Validate YouTube URL format"""
+        # Patterns hỗ trợ nhiều định dạng YouTube URL hơn
         patterns = [
-            r'(https?://)?(www\.)?youtube\.com/watch\?v=[\w-]+',
-            r'(https?://)?(www\.)?youtu\.be/[\w-]+',
-            r'(https?://)?(www\.)?youtube\.com/shorts/[\w-]+'
+            r'(https?://)?(www\.)?youtube\.com/watch\?v=[\w_-]+',  # Standard watch URL
+            r'(https?://)?(www\.)?youtube\.com/watch\?.*v=[\w_-]+',  # Watch URL với params khác
+            r'(https?://)?(www\.)?youtu\.be/[\w_-]+',  # Short URL
+            r'(https?://)?(www\.)?youtube\.com/shorts/[\w_-]+',  # Shorts
+            r'(https?://)?(www\.)?youtube\.com/embed/[\w_-]+',  # Embed URL
+            r'(https?://)?(www\.)?youtube\.com/v/[\w_-]+',  # Old embed format
         ]
         for pattern in patterns:
             if re.match(pattern, url):
