@@ -3098,18 +3098,28 @@ class AccountManager(QMainWindow):
         self.loading_config = False
 
     def init_ui(self):
-        self.setWindowTitle("Google Labs Flow Auto Tool v1.0 - DANGMMO -ZALO: 091.4280.965")
-        self.resize(1600, 900)
+        self.setWindowTitle("Auto VEO3 by Fath - Công cụ tạo Video & Ảnh AI tự động")
+        self.resize(1700, 950)
         
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         
-        main_layout = QHBoxLayout()
-        main_layout.setContentsMargins(10, 10, 10, 10)
-        main_layout.setSpacing(10)
+        main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+        
+        # Header với logo và tên app
+        header_widget = self.create_header()
+        main_layout.addWidget(header_widget)
+        
+        # Content area
+        content_widget = QWidget()
+        content_layout = QHBoxLayout(content_widget)
+        content_layout.setContentsMargins(15, 15, 15, 15)
+        content_layout.setSpacing(15)
         
         self.main_splitter = QSplitter(Qt.Horizontal)
-        self.main_splitter.setHandleWidth(5)
+        self.main_splitter.setHandleWidth(6)
         
         left_panel = self.create_left_panel()
         self.main_splitter.addWidget(left_panel)
@@ -3120,7 +3130,12 @@ class AccountManager(QMainWindow):
         self.main_splitter.setStretchFactor(0, 4)
         self.main_splitter.setStretchFactor(1, 6)
 
-        main_layout.addWidget(self.main_splitter)
+        content_layout.addWidget(self.main_splitter)
+        main_layout.addWidget(content_widget)
+        
+        # Footer với thông tin
+        footer_widget = self.create_footer()
+        main_layout.addWidget(footer_widget)
         
         central_widget.setLayout(main_layout)
         self.apply_styles()
@@ -3141,124 +3156,278 @@ class AccountManager(QMainWindow):
         self.upscale_check.stateChanged.connect(self.on_upscale_changed)
         self.video_tab.mode_changed.connect(self.on_video_mode_changed)
 
+    def create_header(self):
+        header = QWidget()
+        header.setFixedHeight(70)
+        header.setObjectName("headerWidget")
+        
+        layout = QHBoxLayout(header)
+        layout.setContentsMargins(20, 10, 20, 10)
+        layout.setSpacing(15)
+        
+        # Logo và tên
+        logo_layout = QHBoxLayout()
+        logo_layout.setSpacing(12)
+        
+        logo_label = QLabel("🎬")
+        logo_label.setStyleSheet("font-size: 32px;")
+        logo_layout.addWidget(logo_label)
+        
+        title_layout = QVBoxLayout()
+        title_layout.setSpacing(0)
+        
+        app_name = QLabel("Auto VEO3 by Fath")
+        app_name.setObjectName("appTitle")
+        app_name.setStyleSheet("font-size: 22px; font-weight: bold; color: #ffffff; margin: 0;")
+        title_layout.addWidget(app_name)
+        
+        subtitle = QLabel("Công cụ tạo Video & Ảnh AI tự động từ Google Labs")
+        subtitle.setStyleSheet("font-size: 12px; color: rgba(255,255,255,0.8); margin: 0;")
+        title_layout.addWidget(subtitle)
+        
+        logo_layout.addLayout(title_layout)
+        layout.addLayout(logo_layout)
+        
+        layout.addStretch()
+        
+        # Status indicators
+        status_layout = QHBoxLayout()
+        status_layout.setSpacing(20)
+        
+        self.status_accounts = QLabel("🔐 Tài khoản: 0")
+        self.status_accounts.setStyleSheet("color: rgba(255,255,255,0.9); font-size: 12px;")
+        status_layout.addWidget(self.status_accounts)
+        
+        self.status_tasks = QLabel("📋 Tasks: 0")
+        self.status_tasks.setStyleSheet("color: rgba(255,255,255,0.9); font-size: 12px;")
+        status_layout.addWidget(self.status_tasks)
+        
+        layout.addLayout(status_layout)
+        
+        return header
+
+    def create_footer(self):
+        footer = QWidget()
+        footer.setFixedHeight(35)
+        footer.setObjectName("footerWidget")
+        
+        layout = QHBoxLayout(footer)
+        layout.setContentsMargins(20, 5, 20, 5)
+        
+        version_label = QLabel("v2.0")
+        version_label.setStyleSheet("color: #6b7280; font-size: 11px;")
+        layout.addWidget(version_label)
+        
+        layout.addStretch()
+        
+        credit_label = QLabel("Powered by Fath | Google Labs Flow Integration")
+        credit_label.setStyleSheet("color: #6b7280; font-size: 11px;")
+        layout.addWidget(credit_label)
+        
+        return footer
+
     def create_left_panel(self):
         # Scroll Area bao quanh toàn bộ Panel Trái
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll_area.setObjectName("leftScrollArea")
         
         container = QWidget()
+        container.setObjectName("leftContainer")
         layout = QVBoxLayout()
+        layout.setSpacing(15)
+        layout.setContentsMargins(0, 0, 0, 0)
         
         # --- 1. TAB CHỨC NĂNG (ĐƯỢC ĐƯA VÀO PANEL TRÁI) ---
         self.tab_widget = QTabWidget()
-        self.tab_widget.setStyleSheet("QTabWidget::pane { border: 1px solid #d1d5db; border-radius: 4px; }")
+        self.tab_widget.setObjectName("mainTabWidget")
+        self.tab_widget.setDocumentMode(True)
         
+        # Tab Tạo Ảnh với icon
         self.image_tab = ImageGenerationTab()
-        self.tab_widget.addTab(self.image_tab, "Tạo Ảnh")
+        self.tab_widget.addTab(self.image_tab, "🖼️ Tạo Ảnh")
         
+        # Tab Tạo Video với icon
         self.video_tab = VideoGenerationTab()
-        self.tab_widget.addTab(self.video_tab, "Tạo Video")
+        self.tab_widget.addTab(self.video_tab, "🎬 Tạo Video")
         
+        # Tab Quản lý tài khoản với icon
         self.account_tab = AccountTab()
-        self.tab_widget.addTab(self.account_tab, "Quản lý TK")
+        self.tab_widget.addTab(self.account_tab, "👤 Tài Khoản")
         
+        # Tab Viết Kịch Bản với icon
         self.script_tab = ScriptWritingTab()
-        self.tab_widget.addTab(self.script_tab, "Viết Kịch Bản")
+        self.tab_widget.addTab(self.script_tab, "📝 Kịch Bản")
         
+        # Tab Siêu Đồng Bộ với icon
         self.sync_tab = SuperSyncTab()
-        self.tab_widget.addTab(self.sync_tab, "Siêu Đồng Bộ")
+        self.tab_widget.addTab(self.sync_tab, "🔄 Đồng Bộ")
         
         layout.addWidget(self.tab_widget)
         
         # --- 2. PHẦN CÀI ĐẶT & BUTTON ---
         self.control_group = QFrame()
+        self.control_group.setObjectName("controlGroup")
         self.control_group.setFrameShape(QFrame.StyledPanel)
         control_layout = QVBoxLayout()
+        control_layout.setSpacing(12)
+        control_layout.setContentsMargins(15, 15, 15, 15)
         
-        settings_label = QLabel("Cài đặt Chung:")
-        settings_label.setFont(QFont("Arial", 11, QFont.Bold))
-        control_layout.addWidget(settings_label)
+        # Header của phần cài đặt
+        settings_header = QHBoxLayout()
+        settings_icon = QLabel("⚙️")
+        settings_icon.setStyleSheet("font-size: 18px;")
+        settings_header.addWidget(settings_icon)
         
-        thread_layout = QHBoxLayout()
-        thread_layout.addWidget(QLabel("Số luồng xử lý:"))
+        settings_label = QLabel("Cài đặt Chung")
+        settings_label.setObjectName("sectionTitle")
+        settings_label.setStyleSheet("font-size: 14px; font-weight: bold; color: #1f2937;")
+        settings_header.addWidget(settings_label)
+        settings_header.addStretch()
+        control_layout.addLayout(settings_header)
+        
+        # Separator line
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        separator.setStyleSheet("background-color: #e5e7eb;")
+        separator.setFixedHeight(1)
+        control_layout.addWidget(separator)
+        
+        # Settings grid
+        settings_grid = QGridLayout()
+        settings_grid.setSpacing(10)
+        
+        # Số luồng
+        thread_label = QLabel("Số luồng xử lý:")
+        thread_label.setStyleSheet("font-size: 12px; color: #4b5563;")
+        settings_grid.addWidget(thread_label, 0, 0)
         self.thread_spin = QSpinBox()
         self.thread_spin.setMinimum(1)
         self.thread_spin.setMaximum(20)
         self.thread_spin.setValue(5)
-        thread_layout.addWidget(self.thread_spin)
-        control_layout.addLayout(thread_layout)
+        self.thread_spin.setFixedWidth(80)
+        settings_grid.addWidget(self.thread_spin, 0, 1)
 
-        delay_prompt_layout = QHBoxLayout()
-        delay_prompt_layout.addWidget(QLabel("Delay gửi prompt (giây):"))
+        # Delay prompt
+        delay_label = QLabel("Delay prompt (s):")
+        delay_label.setStyleSheet("font-size: 12px; color: #4b5563;")
+        settings_grid.addWidget(delay_label, 0, 2)
         self.prompt_delay_spin = QDoubleSpinBox()
         self.prompt_delay_spin.setDecimals(1)
         self.prompt_delay_spin.setSingleStep(0.1)
         self.prompt_delay_spin.setMinimum(0.0)
         self.prompt_delay_spin.setMaximum(60.0)
         self.prompt_delay_spin.setValue(0.5)
-        delay_prompt_layout.addWidget(self.prompt_delay_spin)
-        control_layout.addLayout(delay_prompt_layout)
+        self.prompt_delay_spin.setFixedWidth(80)
+        settings_grid.addWidget(self.prompt_delay_spin, 0, 3)
+        
+        control_layout.addLayout(settings_grid)
 
+        # Output folder
         output_layout = QHBoxLayout()
-        output_layout.addWidget(QLabel("Thư mục lưu:"))
+        output_icon = QLabel("📁")
+        output_layout.addWidget(output_icon)
+        output_label = QLabel("Thư mục lưu:")
+        output_label.setStyleSheet("font-size: 12px; color: #4b5563;")
+        output_layout.addWidget(output_label)
         self.output_path = QLineEdit()
         self.output_path.setText(self.output_folder)
+        self.output_path.setStyleSheet("font-size: 11px;")
         output_layout.addWidget(self.output_path)
         
         browse_output_btn = QPushButton("...")
-        browse_output_btn.setMaximumWidth(40)
+        browse_output_btn.setFixedWidth(35)
+        browse_output_btn.setFixedHeight(30)
         browse_output_btn.clicked.connect(self.browse_output_folder)
         output_layout.addWidget(browse_output_btn)
         control_layout.addLayout(output_layout)
         
-        direct_layout = QHBoxLayout()
-        self.upscale_check = QCheckBox("Upscale 1080p (Video)")
-        self.direct_project_check = QCheckBox("Vào thẳng dự án")
-        direct_layout.addWidget(self.upscale_check)
-        direct_layout.addWidget(self.direct_project_check)
-        direct_layout.addStretch()
-        control_layout.addLayout(direct_layout)
-
-        self.hide_browser_check = QCheckBox("Ẩn cửa sổ Chrome (chạy ngầm)")
-        control_layout.addWidget(self.hide_browser_check)
-                
-        btn_grid = QGridLayout()
+        # Checkboxes
+        checkbox_layout = QHBoxLayout()
+        checkbox_layout.setSpacing(15)
         
-        self.start_btn = QPushButton("▶ Bắt đầu")
-        self.start_btn.setStyleSheet("background-color: #4CAF50; color: white; padding: 12px; font-size: 14px; font-weight: bold; border-radius: 6px;")
+        self.upscale_check = QCheckBox("🎥 Upscale 1080p")
+        self.upscale_check.setStyleSheet("font-size: 11px;")
+        checkbox_layout.addWidget(self.upscale_check)
+        
+        self.direct_project_check = QCheckBox("🚀 Vào thẳng dự án")
+        self.direct_project_check.setStyleSheet("font-size: 11px;")
+        checkbox_layout.addWidget(self.direct_project_check)
+        
+        self.hide_browser_check = QCheckBox("👁️ Ẩn Chrome")
+        self.hide_browser_check.setStyleSheet("font-size: 11px;")
+        checkbox_layout.addWidget(self.hide_browser_check)
+        
+        checkbox_layout.addStretch()
+        control_layout.addLayout(checkbox_layout)
+        
+        # Action buttons
+        btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(10)
+        
+        self.start_btn = QPushButton("▶️ Bắt đầu")
+        self.start_btn.setObjectName("startButton")
+        self.start_btn.setFixedHeight(45)
+        self.start_btn.setCursor(Qt.PointingHandCursor)
         self.start_btn.clicked.connect(self.start_processing)
-        btn_grid.addWidget(self.start_btn, 0, 0)
+        btn_layout.addWidget(self.start_btn)
         
-        self.stop_btn = QPushButton("⬛ Dừng lại")
-        self.stop_btn.setStyleSheet("background-color: #f44336; color: white; padding: 12px; font-size: 14px; font-weight: bold; border-radius: 6px;")
+        self.stop_btn = QPushButton("⏹️ Dừng")
+        self.stop_btn.setObjectName("stopButton")
+        self.stop_btn.setFixedHeight(45)
+        self.stop_btn.setCursor(Qt.PointingHandCursor)
         self.stop_btn.clicked.connect(self.stop_processing)
         self.stop_btn.setEnabled(False)
-        btn_grid.addWidget(self.stop_btn, 0, 1)
+        btn_layout.addWidget(self.stop_btn)
         
-        open_folder_btn = QPushButton("📁 Mở thư mục")
-        open_folder_btn.setStyleSheet("background-color: #2196F3; color: white; padding: 10px; border-radius: 6px;")
+        control_layout.addLayout(btn_layout)
+        
+        # Secondary buttons
+        secondary_btn_layout = QHBoxLayout()
+        secondary_btn_layout.setSpacing(8)
+        
+        open_folder_btn = QPushButton("📂 Mở thư mục")
+        open_folder_btn.setObjectName("secondaryButton")
+        open_folder_btn.setFixedHeight(35)
+        open_folder_btn.setCursor(Qt.PointingHandCursor)
         open_folder_btn.clicked.connect(self.open_output_folder)
-        btn_grid.addWidget(open_folder_btn, 1, 0)
+        secondary_btn_layout.addWidget(open_folder_btn)
         
         save_config_btn = QPushButton("💾 Lưu cấu hình")
-        save_config_btn.setStyleSheet("background-color: #FF9800; color: white; padding: 10px; border-radius: 6px;")
+        save_config_btn.setObjectName("secondaryButton")
+        save_config_btn.setFixedHeight(35)
+        save_config_btn.setCursor(Qt.PointingHandCursor)
         save_config_btn.clicked.connect(self.save_config)
-        btn_grid.addWidget(save_config_btn, 1, 1)
+        secondary_btn_layout.addWidget(save_config_btn)
         
-        control_layout.addLayout(btn_grid)
+        control_layout.addLayout(secondary_btn_layout)
         
-        # Nút Cài đặt nhanh
-        control_layout.addWidget(QLabel("--- Cài đặt nhanh ---"))
+        # Quick settings
+        quick_header = QHBoxLayout()
+        quick_icon = QLabel("⚡")
+        quick_icon.setStyleSheet("font-size: 14px;")
+        quick_header.addWidget(quick_icon)
+        quick_label = QLabel("Cài đặt nhanh")
+        quick_label.setStyleSheet("font-size: 12px; font-weight: 600; color: #6b7280;")
+        quick_header.addWidget(quick_label)
+        quick_header.addStretch()
+        control_layout.addLayout(quick_header)
+        
         quick_btn_layout = QHBoxLayout()
+        quick_btn_layout.setSpacing(8)
         
         self.quick_cookie_btn = QPushButton("🍪 Thêm Cookie")
-        self.quick_cookie_btn.setStyleSheet("background-color: #6c757d; color: white; padding: 8px;")
+        self.quick_cookie_btn.setObjectName("quickButton")
+        self.quick_cookie_btn.setFixedHeight(32)
+        self.quick_cookie_btn.setCursor(Qt.PointingHandCursor)
         self.quick_cookie_btn.clicked.connect(self.open_cookie_dialog)
         quick_btn_layout.addWidget(self.quick_cookie_btn)
         
-        self.quick_api_btn = QPushButton("🔑 Cài API Key")
-        self.quick_api_btn.setStyleSheet("background-color: #17a2b8; color: white; padding: 8px;")
+        self.quick_api_btn = QPushButton("🔑 API Key")
+        self.quick_api_btn.setObjectName("quickButton")
+        self.quick_api_btn.setFixedHeight(32)
+        self.quick_api_btn.setCursor(Qt.PointingHandCursor)
         self.quick_api_btn.clicked.connect(self.open_api_key_dialog)
         quick_btn_layout.addWidget(self.quick_api_btn)
         
@@ -3318,25 +3487,48 @@ class AccountManager(QMainWindow):
  
     def create_right_panel(self):
         widget = QWidget()
+        widget.setObjectName("rightPanel")
         layout = QVBoxLayout()
+        layout.setSpacing(12)
+        layout.setContentsMargins(0, 0, 0, 0)
 
-        title_label = QLabel("Bảng tiến trình")
-        title_label.setFont(QFont("Arial", 11, QFont.Bold))
-        layout.addWidget(title_label)
+        # Header của bảng tiến trình
+        header_layout = QHBoxLayout()
+        header_layout.setSpacing(10)
+        
+        table_icon = QLabel("📊")
+        table_icon.setStyleSheet("font-size: 20px;")
+        header_layout.addWidget(table_icon)
+        
+        title_label = QLabel("Bảng Tiến Trình")
+        title_label.setObjectName("panelTitle")
+        title_label.setStyleSheet("font-size: 16px; font-weight: bold; color: #1f2937;")
+        header_layout.addWidget(title_label)
+        
+        header_layout.addStretch()
+        
+        # Statistics labels
+        self.stats_label = QLabel("Tổng: 0 | Đang chạy: 0 | Hoàn thành: 0")
+        self.stats_label.setStyleSheet("font-size: 11px; color: #6b7280; padding: 5px 10px; background: #f3f4f6; border-radius: 10px;")
+        header_layout.addWidget(self.stats_label)
+        
+        layout.addLayout(header_layout)
 
         self.result_table = ResultTable()
         self.log_widget = LogWidget()
         
-        bottom_info_widget = QWidget()
-        bottom_info_layout = QVBoxLayout()
-        bottom_info_layout.setContentsMargins(0, 0, 0, 0)
-        bottom_info_layout.addWidget(self.log_widget)
-        bottom_info_widget.setLayout(bottom_info_layout)
+        # Container cho log
+        log_container = QWidget()
+        log_container.setObjectName("logContainer")
+        log_layout = QVBoxLayout(log_container)
+        log_layout.setContentsMargins(0, 0, 0, 0)
+        log_layout.addWidget(self.log_widget)
         
         # Dùng Splitter Dọc để chia Bảng (Trên) và Log (Dưới)
         self.right_splitter = QSplitter(Qt.Vertical)
+        self.right_splitter.setHandleWidth(5)
         self.right_splitter.addWidget(self.result_table)
-        self.right_splitter.addWidget(bottom_info_widget)
+        self.right_splitter.addWidget(log_container)
         
         self.right_splitter.setStretchFactor(0, 7)
         self.right_splitter.setStretchFactor(1, 3)
@@ -3349,131 +3541,383 @@ class AccountManager(QMainWindow):
         
     def apply_styles(self):
         self.setStyleSheet("""
+            /* === MAIN WINDOW === */
             QMainWindow {
-                background-color: #f0f2f5;
-            }
-            /* --- TAB STYLES --- */
-            QTabWidget::pane {
-                border: 1px solid #d1d5db;
-                background-color: white;
-                border-radius: 6px;
-                margin-top: -1px;
-            }
-            QTabBar::tab {
-                background-color: #e5e7eb;
-                color: #374151;
-                padding: 10px 20px;
-                margin-right: 4px;
-                border-top-left-radius: 6px;
-                border-top-right-radius: 6px;
-                border: 1px solid #d1d5db;
-                border-bottom: none;
-                min-width: 80px; /* Đảm bảo tab không quá nhỏ */
-            }
-            QTabBar::tab:selected {
-                background-color: white;
-                color: #1f2937;
-                font-weight: bold;
-                border-bottom: 2px solid white; /* Che viền pane */
+                background-color: #f8fafc;
             }
             
-            /* --- INPUT & COMBOBOX --- */
-            QLabel { color: #1f2937; font-size: 13px; }
-            QLineEdit, QTextEdit, QSpinBox {
-                padding: 8px;
-                border: 1px solid #d1d5db;
-                border-radius: 4px;
-                background-color: white;
-                selection-background-color: #3b82f6;
+            /* === HEADER WIDGET === */
+            #headerWidget {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                    stop:0 #667eea, stop:0.5 #764ba2, stop:1 #f093fb);
+                border: none;
             }
+            
+            /* === FOOTER WIDGET === */
+            #footerWidget {
+                background-color: #ffffff;
+                border-top: 1px solid #e5e7eb;
+            }
+            
+            /* === LEFT PANEL === */
+            #leftScrollArea {
+                background-color: transparent;
+                border: none;
+            }
+            #leftContainer {
+                background-color: transparent;
+            }
+            
+            /* === CONTROL GROUP === */
+            #controlGroup {
+                background-color: #ffffff;
+                border: 1px solid #e5e7eb;
+                border-radius: 12px;
+                padding: 5px;
+            }
+            
+            /* === TAB WIDGET - MODERN STYLE === */
+            #mainTabWidget {
+                background-color: transparent;
+            }
+            #mainTabWidget::pane {
+                background-color: #ffffff;
+                border: 1px solid #e5e7eb;
+                border-radius: 0 12px 12px 12px;
+                margin-top: -1px;
+                padding: 10px;
+            }
+            #mainTabWidget > QTabBar::tab {
+                background-color: #f1f5f9;
+                color: #64748b;
+                padding: 12px 18px;
+                margin-right: 4px;
+                border-top-left-radius: 10px;
+                border-top-right-radius: 10px;
+                border: 1px solid #e2e8f0;
+                border-bottom: none;
+                font-weight: 500;
+                font-size: 12px;
+                min-width: 90px;
+            }
+            #mainTabWidget > QTabBar::tab:selected {
+                background-color: #ffffff;
+                color: #1e293b;
+                font-weight: 600;
+                border-color: #e5e7eb;
+                border-bottom: 2px solid #ffffff;
+            }
+            #mainTabWidget > QTabBar::tab:hover:!selected {
+                background-color: #e2e8f0;
+                color: #475569;
+            }
+            
+            /* === LABELS === */
+            QLabel {
+                color: #334155;
+                font-size: 13px;
+            }
+            
+            /* === INPUT FIELDS === */
+            QLineEdit, QTextEdit, QSpinBox, QDoubleSpinBox {
+                padding: 10px 12px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                background-color: #ffffff;
+                color: #1e293b;
+                selection-background-color: #818cf8;
+                font-size: 13px;
+            }
+            QLineEdit:focus, QTextEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus {
+                border-color: #818cf8;
+                outline: none;
+            }
+            
+            /* === COMBOBOX === */
             QComboBox {
-                padding: 8px;
-                border: 1px solid #d1d5db;
-                border-radius: 4px;
-                background-color: white;
-                color: #1f2937;
+                padding: 10px 12px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                background-color: #ffffff;
+                color: #1e293b;
                 min-height: 20px;
+                font-size: 13px;
+            }
+            QComboBox:focus {
+                border-color: #818cf8;
             }
             QComboBox::drop-down {
                 border: 0px;
-                width: 24px;
+                width: 28px;
+            }
+            QComboBox::down-arrow {
+                width: 12px;
+                height: 12px;
             }
             QComboBox QAbstractItemView {
-                background-color: white;
-                border: 1px solid #d1d5db;
-                color: #1f2937;
-                selection-background-color: #3b82f6;
-                selection-color: white;
-                padding: 4px;
+                background-color: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                color: #1e293b;
+                selection-background-color: #818cf8;
+                selection-color: #ffffff;
+                padding: 6px;
             }
             
-            /* --- BUTTONS (KHÔNG BỊ DẸT) --- */
+            /* === CHECKBOXES === */
+            QCheckBox {
+                spacing: 8px;
+                color: #475569;
+                font-size: 12px;
+            }
+            QCheckBox::indicator {
+                width: 18px;
+                height: 18px;
+                border-radius: 4px;
+                border: 2px solid #cbd5e1;
+                background-color: #ffffff;
+            }
+            QCheckBox::indicator:checked {
+                background-color: #818cf8;
+                border-color: #818cf8;
+            }
+            QCheckBox::indicator:hover {
+                border-color: #818cf8;
+            }
+            
+            /* === START BUTTON === */
+            #startButton {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                    stop:0 #10b981, stop:1 #059669);
+                color: white;
+                font-size: 14px;
+                font-weight: bold;
+                border: none;
+                border-radius: 10px;
+                padding: 12px 24px;
+            }
+            #startButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                    stop:0 #059669, stop:1 #047857);
+            }
+            #startButton:pressed {
+                background-color: #047857;
+            }
+            #startButton:disabled {
+                background-color: #9ca3af;
+                color: #e5e7eb;
+            }
+            
+            /* === STOP BUTTON === */
+            #stopButton {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                    stop:0 #ef4444, stop:1 #dc2626);
+                color: white;
+                font-size: 14px;
+                font-weight: bold;
+                border: none;
+                border-radius: 10px;
+                padding: 12px 24px;
+            }
+            #stopButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                    stop:0 #dc2626, stop:1 #b91c1c);
+            }
+            #stopButton:disabled {
+                background-color: #fecaca;
+                color: #f87171;
+            }
+            
+            /* === SECONDARY BUTTONS === */
+            #secondaryButton {
+                background-color: #f1f5f9;
+                color: #475569;
+                font-size: 12px;
+                font-weight: 500;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 8px 16px;
+            }
+            #secondaryButton:hover {
+                background-color: #e2e8f0;
+                border-color: #cbd5e1;
+            }
+            
+            /* === QUICK BUTTONS === */
+            #quickButton {
+                background-color: #f8fafc;
+                color: #64748b;
+                font-size: 11px;
+                font-weight: 500;
+                border: 1px solid #e2e8f0;
+                border-radius: 6px;
+                padding: 6px 12px;
+            }
+            #quickButton:hover {
+                background-color: #f1f5f9;
+                color: #475569;
+                border-color: #cbd5e1;
+            }
+            
+            /* === GENERAL BUTTONS === */
             QPushButton {
                 padding: 8px 16px;
-                border-radius: 4px;
-                border: 1px solid #d1d5db;
-                background-color: #e5e7eb;
-                color: #111827;
+                border-radius: 8px;
+                border: 1px solid #e2e8f0;
+                background-color: #f8fafc;
+                color: #475569;
                 font-weight: 500;
                 min-height: 24px;
             }
             QPushButton:hover {
-                background-color: #3b82f6;
+                background-color: #818cf8;
                 color: white;
-                border-color: #2563eb;
+                border-color: #818cf8;
             }
             QPushButton:pressed {
-                background-color: #1d4ed8;
-                color: white;
-                border-color: #1d4ed8;
+                background-color: #6366f1;
             }
             QPushButton:disabled {
-                background-color: #e5e7eb;
-                color: #9ca3af;
-                border-color: #d1d5db;
+                background-color: #f1f5f9;
+                color: #94a3b8;
+                border-color: #e2e8f0;
             }
             
-            /* --- GROUP BOX --- */
+            /* === FRAMES === */
             QFrame {
-                background-color: white;
-                border-radius: 6px;
+                background-color: #ffffff;
+                border-radius: 10px;
             }
             
-            /* --- TABLE --- */
+            /* === TABLE === */
             QTableWidget {
-                border: 1px solid #d1d5db;
-                background-color: white;
-                gridline-color: #e5e7eb;
-                selection-background-color: #eff6ff;
-                selection-color: #1f2937;
-                font-size: 13px;
+                border: 1px solid #e2e8f0;
+                border-radius: 10px;
+                background-color: #ffffff;
+                gridline-color: #f1f5f9;
+                selection-background-color: #ede9fe;
+                selection-color: #1e293b;
+                font-size: 12px;
             }
             QHeaderView::section {
-                background-color: #f3f4f6;
-                padding: 8px;
+                background-color: #f8fafc;
+                padding: 10px 8px;
                 border: none;
-                border-right: 1px solid #e5e7eb;
-                border-bottom: 1px solid #e5e7eb;
+                border-right: 1px solid #e2e8f0;
+                border-bottom: 1px solid #e2e8f0;
                 font-weight: 600;
-                color: #374151;
+                font-size: 12px;
+                color: #475569;
+            }
+            QTableWidget::item {
+                padding: 8px;
+                border-bottom: 1px solid #f1f5f9;
+            }
+            QTableWidget::item:selected {
+                background-color: #ede9fe;
             }
             
-            /* --- SCROLLBAR --- */
+            /* === PROGRESS BAR === */
+            QProgressBar {
+                border: none;
+                border-radius: 6px;
+                background-color: #e2e8f0;
+                height: 10px;
+                text-align: center;
+                font-size: 10px;
+            }
+            QProgressBar::chunk {
+                border-radius: 6px;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                    stop:0 #10b981, stop:1 #34d399);
+            }
+            
+            /* === SCROLLBAR === */
             QScrollBar:vertical {
                 border: none;
-                background: #f3f4f6;
+                background: #f8fafc;
                 width: 10px;
-                margin: 0px 0px 0px 0px;
+                border-radius: 5px;
+                margin: 0px;
             }
             QScrollBar::handle:vertical {
-                background: #d1d5db;
-                min-height: 20px;
+                background: #cbd5e1;
+                min-height: 30px;
                 border-radius: 5px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: #94a3b8;
             }
             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
                 height: 0px;
             }
+            QScrollBar:horizontal {
+                border: none;
+                background: #f8fafc;
+                height: 10px;
+                border-radius: 5px;
+            }
+            QScrollBar::handle:horizontal {
+                background: #cbd5e1;
+                min-width: 30px;
+                border-radius: 5px;
+            }
+            QScrollBar::handle:horizontal:hover {
+                background: #94a3b8;
+            }
+            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+                width: 0px;
+            }
+            
+            /* === SPLITTER === */
+            QSplitter::handle {
+                background-color: #e2e8f0;
+                border-radius: 2px;
+            }
+            QSplitter::handle:horizontal {
+                width: 6px;
+                margin: 20px 0;
+            }
+            QSplitter::handle:vertical {
+                height: 6px;
+                margin: 0 20px;
+            }
+            QSplitter::handle:hover {
+                background-color: #818cf8;
+            }
+            
+            /* === TOOLTIP === */
+            QToolTip {
+                background-color: #1e293b;
+                color: #ffffff;
+                border: none;
+                border-radius: 6px;
+                padding: 8px 12px;
+                font-size: 12px;
+            }
         """)
+
+    def update_status_bar(self):
+        """Cập nhật thanh trạng thái với số liệu thống kê"""
+        try:
+            # Cập nhật số tài khoản
+            num_accounts = len(self.account_tab.accounts) if hasattr(self, 'account_tab') else 0
+            if hasattr(self, 'status_accounts'):
+                self.status_accounts.setText(f"🔐 Tài khoản: {num_accounts}")
+            
+            # Cập nhật số tasks
+            if hasattr(self, 'result_table') and hasattr(self.result_table, 'tasks'):
+                total_tasks = len(self.result_table.tasks)
+                running = sum(1 for t in self.result_table.tasks.values() if t.get('status') == 'processing')
+                completed = sum(1 for t in self.result_table.tasks.values() if t.get('status') == 'completed')
+                
+                if hasattr(self, 'status_tasks'):
+                    self.status_tasks.setText(f"📋 Tasks: {total_tasks}")
+                
+                if hasattr(self, 'stats_label'):
+                    self.stats_label.setText(f"Tổng: {total_tasks} | Đang chạy: {running} | Hoàn thành: {completed}")
+        except Exception:
+            pass
         
     def browse_output_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "Chọn thư mục lưu kết quả")
@@ -3561,6 +4005,7 @@ class AccountManager(QMainWindow):
 
         self.image_tab.prompt_text.clear()
         self.log_widget.add_log(f"Đã thêm {len(prompts)} task (x{count} ảnh) vào hàng chờ.", "info")
+        self.update_status_bar()
 
         if self.stop_btn.isEnabled():
             self.enqueue_new_waiting_tasks()
@@ -3610,6 +4055,7 @@ class AccountManager(QMainWindow):
 
         if added > 0:
             self.log_widget.add_log(f"Đã thêm {added} task video vào hàng chờ.", "info")
+            self.update_status_bar()
         else:
             QMessageBox.warning(self, "Lỗi", "Không có tác vụ video hợp lệ để thêm vào bảng.")
             return
@@ -4116,6 +4562,7 @@ class AccountManager(QMainWindow):
 
     def on_progress_update(self, task_id, progress, status, metadata):
         self.result_table.update_progress(task_id, progress, status, metadata)
+        self.update_status_bar()
         
     def on_worker_captcha_detected(self, account_index, message):
         if not isinstance(account_index, int):
@@ -4274,6 +4721,8 @@ class AccountManager(QMainWindow):
         if has_valid_data:
             self.result_table.set_preview(task_id, results, prompt, saved_files)
 
+        self.update_status_bar()
+        
         if self.completed_tasks >= self.total_tasks:
             self.on_all_tasks_complete()
 
@@ -4625,6 +5074,7 @@ class AccountManager(QMainWindow):
                     "warning"
                 )
             self.log_widget.add_log("Đã tải cấu hình từ file", "info")
+            self.update_status_bar()
         except Exception as e:
             self.log_widget.add_log(f"Lỗi tải cấu hình: {str(e)}", "warning")
             
