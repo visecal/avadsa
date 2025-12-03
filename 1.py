@@ -3208,30 +3208,24 @@ class AccountManager(QMainWindow):
         # ========== HEADER BAR ==========
         header_widget = QWidget()
         header_widget.setObjectName("headerBar")
-        header_widget.setFixedHeight(70)
+        header_widget.setFixedHeight(60)
         header_layout = QHBoxLayout(header_widget)
-        header_layout.setContentsMargins(20, 10, 20, 10)
+        header_layout.setContentsMargins(20, 8, 20, 8)
         
         # Logo and Title
         logo_title_layout = QHBoxLayout()
+        logo_title_layout.setSpacing(12)
+        
         logo_label = QLabel("🎬")
-        logo_label.setStyleSheet("font-size: 32px;")
+        logo_label.setStyleSheet("font-size: 28px; background: transparent;")
         logo_title_layout.addWidget(logo_label)
         
         title_container = QVBoxLayout()
-        title_container.setSpacing(2)
+        title_container.setSpacing(0)
         app_title = QLabel("AUto VEO3 by Fath")
-        app_title.setStyleSheet("""
-            font-size: 22px;
-            font-weight: bold;
-            color: #ffffff;
-            letter-spacing: 1px;
-        """)
+        app_title.setObjectName("appTitle")
         app_subtitle = QLabel("Professional AI Video & Image Generator")
-        app_subtitle.setStyleSheet("""
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.7);
-        """)
+        app_subtitle.setObjectName("appSubtitle")
         title_container.addWidget(app_title)
         title_container.addWidget(app_subtitle)
         logo_title_layout.addLayout(title_container)
@@ -3243,11 +3237,7 @@ class AccountManager(QMainWindow):
         status_layout.setSpacing(15)
         
         self.status_indicator = QLabel("● Ready")
-        self.status_indicator.setStyleSheet("""
-            color: #10B981;
-            font-size: 12px;
-            font-weight: 600;
-        """)
+        self.status_indicator.setObjectName("statusIndicator")
         status_layout.addWidget(self.status_indicator)
         
         header_layout.addLayout(status_layout)
@@ -3601,6 +3591,27 @@ class AccountManager(QMainWindow):
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                     stop:0 #1e293b, stop:0.5 #334155, stop:1 #475569);
                 border-bottom: 3px solid #6366f1;
+            }
+            
+            #appTitle {
+                font-size: 20px;
+                font-weight: bold;
+                color: #ffffff;
+                letter-spacing: 1px;
+                background: transparent;
+            }
+            
+            #appSubtitle {
+                font-size: 11px;
+                color: #94a3b8;
+                background: transparent;
+            }
+            
+            #statusIndicator {
+                color: #10B981;
+                font-size: 12px;
+                font-weight: 600;
+                background: transparent;
             }
             
             /* ========== LEFT CONTAINER ========== */
@@ -6296,7 +6307,7 @@ class VideoGenerationTab(QWidget):
         quality_label.setStyleSheet("font-weight: 600; color: #475569;")
         config_layout.addWidget(quality_label, 2, 2)
         self.quality_combo = QComboBox()
-        self.quality_combo.addItems(["720p (mặc định)", "1080p (tốn credit)"])
+        self.quality_combo.addItems(["720p (mặc định)", "1080p (tốn thêm credit)"])
         config_layout.addWidget(self.quality_combo, 2, 3)
 
         layout.addWidget(config_group)
