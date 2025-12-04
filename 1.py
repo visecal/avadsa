@@ -7594,15 +7594,21 @@ class VideoGenerationTab(QWidget):
         if template:
             current_text = self.text_prompt_edit.toPlainText().strip()
             if current_text:
-                # Nếu đã có text, thêm vào dòng mới
-                self.text_prompt_edit.setPlainText(current_text + "\n" + template)
+                # Nếu đã có text, thêm vào dòng mới với khoảng cách đủ
+                if not current_text.endswith("\n"):
+                    current_text += "\n"
+                self.text_prompt_edit.setPlainText(current_text + template)
             else:
                 # Nếu trống, điền template
                 self.text_prompt_edit.setPlainText(template)
 
         # Reset combo về "Chọn thể loại" sau khi đã điền
         self.style_preset_combo.blockSignals(True)
-        self.style_preset_combo.setCurrentIndex(0)
+        none_index = self.style_preset_combo.findData("none")
+        if none_index >= 0:
+            self.style_preset_combo.setCurrentIndex(none_index)
+        else:
+            self.style_preset_combo.setCurrentIndex(0)
         self.style_preset_combo.blockSignals(False)
 
     def update_text_prompt_count(self):
