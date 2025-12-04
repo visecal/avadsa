@@ -188,6 +188,220 @@ FLOW_CONFIG = {
     },
 }
 
+# VEO3 Preset Style Prompts - Hướng dẫn tạo video theo từng thể loại phim
+VEO3_STYLE_PRESETS = {
+    "none": {
+        "name": "-- Chọn thể loại phim --",
+        "description": "",
+        "prompt_template": ""
+    },
+    "animation_pixar": {
+        "name": "🎬 Hoạt hình Pixar/3D",
+        "description": "Phong cách hoạt hình 3D Pixar với màu sắc tươi sáng, nhân vật biểu cảm",
+        "prompt_template": """Pixar-style 3D animation: [MÔ TẢ CẢNH]. Wide angle shot, soft bokeh background, colorful and bright lighting. Exaggerated facial expressions and dynamic character movements. Cheerful synth music accompanies the scene. Vibrant primary colors with soft pastel tones in the background."""
+    },
+    "animation_2d": {
+        "name": "🎨 Hoạt hình 2D/Cartoon",
+        "description": "Phong cách hoạt hình 2D truyền thống với đường nét rõ ràng",
+        "prompt_template": """2D traditional animation style: [MÔ TẢ CẢNH]. Flat cartoon aesthetic with bold outlines, hand-drawn textures. Playful camera pans and zooms. Bright saturated colors, clean cel-shaded look. Upbeat cartoon soundtrack with bouncy rhythm."""
+    },
+    "animation_stopmotion": {
+        "name": "🧱 Stop Motion/Claymation",
+        "description": "Phong cách stop-motion như Wallace & Gromit",
+        "prompt_template": """Stop-motion claymation style: [MÔ TẢ CẢNH]. Handcrafted miniature sets with visible textures. Slightly jerky frame-by-frame movement characteristic of stop-motion. Warm studio lighting, tangible materials feel. Whimsical orchestral score."""
+    },
+    "anime_ghibli": {
+        "name": "🌸 Anime Ghibli",
+        "description": "Phong cách anime Studio Ghibli với thiên nhiên tươi đẹp",
+        "prompt_template": """In the style of Studio Ghibli: [MÔ TẢ CẢNH]. Lush hand-painted backgrounds with incredible detail. Soft watercolor aesthetics, gentle pastel sky. Wind blows through grass and hair naturally. Peaceful ambient sounds, gentle piano or orchestral music. Warm golden hour lighting."""
+    },
+    "anime_shonen": {
+        "name": "⚔️ Anime Shonen/Action",
+        "description": "Phong cách anime hành động với speedlines và hiệu ứng mạnh",
+        "prompt_template": """Modern shonen anime style: [MÔ TẢ CẢNH]. Dynamic action poses with speedline backgrounds. Bold color palette with dramatic lighting contrasts. Intense close-ups on expressive eyes. Epic orchestral battle music. Camera zooms and dramatic angles emphasizing power and motion."""
+    },
+    "anime_slice_of_life": {
+        "name": "🌅 Anime Slice of Life",
+        "description": "Anime đời thường nhẹ nhàng với ánh sáng mềm mại",
+        "prompt_template": """Slice-of-life anime aesthetic: [MÔ TẢ CẢNH]. Soft pastel color palette, warm afternoon lighting. Cherry blossom petals floating gently in the wind. Calm everyday scenes with attention to small details. Lo-fi ambient soundtrack, gentle acoustic guitar."""
+    },
+    "cinematic_hollywood": {
+        "name": "🎥 Điện ảnh Hollywood",
+        "description": "Chất lượng điện ảnh Hollywood với ánh sáng chuyên nghiệp",
+        "prompt_template": """Cinematic Hollywood quality: [MÔ TẢ CẢNH]. Professional cinematography with shallow depth of field. Dramatic lighting with motivated light sources. Slow dolly movements and crane shots. Rich color grading, film grain texture. Epic orchestral score building emotion."""
+    },
+    "cinematic_indie": {
+        "name": "🎞️ Phim độc lập/Indie",
+        "description": "Phong cách phim indie với góc quay tự nhiên",
+        "prompt_template": """Indie film aesthetic: [MÔ TẢ CẢNH]. Handheld camera work with natural lighting. Intimate close-ups capturing raw emotions. Muted color palette with occasional warm tones. Ambient environmental sounds, indie folk music. Documentary-like authenticity."""
+    },
+    "advertising_product": {
+        "name": "📺 Quảng cáo sản phẩm",
+        "description": "Quảng cáo sản phẩm chuyên nghiệp với ánh sáng studio",
+        "prompt_template": """Premium product advertisement: [MÔ TẢ SẢN PHẨM]. High-gloss studio lighting with perfect reflections. Slow rotating product showcase on elegant surface. Quick tracking shots highlighting features and details. Upbeat electronic soundtrack, confident voiceover. Clean white background fading to lifestyle shots."""
+    },
+    "advertising_lifestyle": {
+        "name": "🏃 Quảng cáo Lifestyle",
+        "description": "Quảng cáo phong cách sống năng động",
+        "prompt_template": """Lifestyle advertisement: [MÔ TẢ CẢNH]. Golden hour lighting in aspirational settings. Attractive people enjoying life naturally. Dynamic tracking shots following action. Feel-good pop music, energetic pace. Warm color grading emphasizing happiness and vitality."""
+    },
+    "advertising_corporate": {
+        "name": "🏢 Video doanh nghiệp",
+        "description": "Video giới thiệu công ty/doanh nghiệp chuyên nghiệp",
+        "prompt_template": """Corporate video: [MÔ TẢ CẢNH]. Wide-angle tracking shot through modern glass office. Sunlight streaming through tall windows. Professional team members collaborating confidently. Polished clean aesthetic, blue and white color palette. Inspirational background music, confident narration."""
+    },
+    "documentary": {
+        "name": "📹 Phim tài liệu",
+        "description": "Phong cách phim tài liệu chân thực",
+        "prompt_template": """Documentary style: [MÔ TẢ CẢNH]. Handheld camera following subject naturally. Natural lighting conditions, realistic environments. Interview-style framing with subtle camera movements. Ambient environmental audio, subtle documentary score. Authentic verité feel with observational approach."""
+    },
+    "documentary_nature": {
+        "name": "🦁 Tài liệu thiên nhiên",
+        "description": "Phim tài liệu thiên nhiên như National Geographic",
+        "prompt_template": """Nature documentary: [MÔ TẢ CẢNH]. Stunning wildlife cinematography with telephoto lens compression. Epic landscape establishing shots. Slow motion capturing animal behavior details. Rich natural soundscape with ambient forest/ocean sounds. David Attenborough-style narration tone."""
+    },
+    "horror": {
+        "name": "👻 Kinh dị/Horror",
+        "description": "Phim kinh dị với bầu không khí căng thẳng",
+        "prompt_template": """Horror film atmosphere: [MÔ TẢ CẢNH]. Low-key moody lighting with deep shadows. Slow creeping camera movements through dark corridors. Flickering lights, fog, and unsettling environments. Discordant music stingers, distant whispers. Cold blue-green color grade, high contrast."""
+    },
+    "thriller": {
+        "name": "😰 Thriller/Gerilim",
+        "description": "Phim ly kỳ hồi hộp với nhịp độ căng thẳng",
+        "prompt_template": """Thriller genre: [MÔ TẢ CẢNH]. Tense handheld camera with quick cuts. Dramatic shadows and high contrast lighting. Closeups on anxious facial expressions. Heartbeat sound effects, suspenseful string music. Desaturated color palette with strategic color pops."""
+    },
+    "scifi": {
+        "name": "🚀 Khoa học viễn tưởng",
+        "description": "Phim sci-fi với công nghệ tương lai",
+        "prompt_template": """Science fiction: [MÔ TẢ CẢNH]. Futuristic environments with holographic displays. Neon lighting in cyan, magenta, and purple. Sleek technological surfaces and interfaces. Aerial shots of futuristic cityscapes. Synthwave electronic soundtrack, ambient spaceship sounds."""
+    },
+    "scifi_cyberpunk": {
+        "name": "🌃 Cyberpunk",
+        "description": "Phong cách Cyberpunk với neon và mưa",
+        "prompt_template": """Cyberpunk aesthetic: [MÔ TẢ CẢNH]. Rain-soaked neon streets at night. Dense urban cityscape with towering holographic advertisements. Characters in futuristic tech-wear. Neon reflections on wet surfaces. Heavy synthwave bass, electronic ambient sounds."""
+    },
+    "fantasy": {
+        "name": "🐉 Fantasy/Giả tưởng",
+        "description": "Phim fantasy với thế giới ma thuật",
+        "prompt_template": """High fantasy: [MÔ TẢ CẢNH]. Magical landscapes with ethereal lighting. Epic wide shots of fantasy kingdoms. Glowing magical effects and particles. Majestic orchestral score with choir. Rich saturated colors, golden hour fantasy lighting."""
+    },
+    "romance": {
+        "name": "💕 Lãng mạn/Romance",
+        "description": "Phim tình cảm lãng mạn với ánh sáng mềm",
+        "prompt_template": """Romantic film: [MÔ TẢ CẢNH]. Soft golden hour lighting with lens flares. Intimate closeups on loving expressions. Slow motion moments of connection. Warm pastel color palette, dreamy bokeh. Gentle piano melody, romantic strings."""
+    },
+    "comedy": {
+        "name": "😂 Hài/Comedy",
+        "description": "Phim hài với nhịp độ vui nhộn",
+        "prompt_template": """Comedy style: [MÔ TẢ CẢNH]. Bright even lighting, cheerful atmosphere. Wide shots for physical comedy timing. Quick cuts and reaction shots. Upbeat quirky soundtrack. Saturated warm colors, playful camera movements."""
+    },
+    "action": {
+        "name": "💥 Hành động/Action",
+        "description": "Phim hành động với cảnh đánh đấm mạnh mẽ",
+        "prompt_template": """Action movie: [MÔ TẢ CẢNH]. Dynamic tracking shots following high-speed movement. Dramatic slow-motion impact moments. Intense close-combat sequences. Powerful percussive soundtrack, bass drops. High contrast, desaturated with orange and teal grading."""
+    },
+    "sports": {
+        "name": "🏆 Thể thao/Sports",
+        "description": "Video thể thao với năng lượng cao",
+        "prompt_template": """Sports footage: [MÔ TẢ CẢNH]. Epic slow-motion athletic movements. Dynamic camera angles from multiple positions. Stadium atmosphere with crowd energy. Intense rock/electronic soundtrack building to climax. High contrast, crisp sharp imagery."""
+    },
+    "music_video": {
+        "name": "🎵 MV/Music Video",
+        "description": "Video âm nhạc với hình ảnh nghệ thuật",
+        "prompt_template": """Music video style: [MÔ TẢ CẢNH]. Creative visual transitions synced to beat. Abstract artistic imagery and metaphors. Performance shots with dramatic lighting. Bold color grading matching song mood. Camera movements choreographed to music rhythm."""
+    },
+    "music_video_lofi": {
+        "name": "🎧 Lo-fi/Chill",
+        "description": "Video lofi aesthetic nhẹ nhàng thư giãn",
+        "prompt_template": """Lo-fi chill aesthetic: [MÔ TẢ CẢNH]. Cozy indoor scenes with warm lamp lighting. Rain on windows, coffee steam rising. Gentle camera movements, static peaceful shots. Muted vintage color palette with film grain. Soft ambient lo-fi beats, rain sounds."""
+    },
+    "fashion": {
+        "name": "👗 Thời trang/Fashion",
+        "description": "Video thời trang cao cấp",
+        "prompt_template": """High fashion editorial: [MÔ TẢ CẢNH]. Cinematic slow-motion model movements. Dramatic studio lighting emphasizing fabrics and textures. Elegant tracking shots and close-ups on details. Sleek electronic ambient soundtrack. Sophisticated color grading, high contrast glamour."""
+    },
+    "food": {
+        "name": "🍽️ Ẩm thực/Food",
+        "description": "Video ẩm thực với cận cảnh hấp dẫn",
+        "prompt_template": """Food cinematography: [MÔ TẢ MÓN ĂN]. Macro close-ups of ingredients and textures. Slow-motion pouring, sizzling, and plating. Steam rising, sauces dripping satisfyingly. Warm appetizing lighting, shallow depth of field. ASMR cooking sounds, gentle acoustic music."""
+    },
+    "travel": {
+        "name": "✈️ Du lịch/Travel",
+        "description": "Video du lịch khám phá với góc rộng",
+        "prompt_template": """Travel vlog style: [MÔ TẢ ĐỊA ĐIỂM]. Stunning aerial drone shots of landscapes. Golden hour time-lapse of famous landmarks. POV walking through local streets and markets. Energetic indie/acoustic soundtrack. Vibrant saturated colors, smooth stabilized footage."""
+    },
+    "vlog": {
+        "name": "📱 Vlog/YouTube",
+        "description": "Video vlog cá nhân gần gũi",
+        "prompt_template": """Vlog style: [MÔ TẢ CẢNH]. POV handheld camera following daily activities. Natural lighting, authentic environments. Direct-to-camera talking head moments. B-roll cutaways of details and surroundings. Casual indie pop background music."""
+    },
+    "western": {
+        "name": "🤠 Cao bồi/Western",
+        "description": "Phim cao bồi miền Tây hoang dã",
+        "prompt_template": """Classic Western: [MÔ TẢ CẢNH]. Dusty desert landscapes under blazing sun. Wide establishing shots of frontier towns. Slow deliberate camera movements. Harmonica and twangy guitar score. Warm sepia tones, high noon harsh lighting."""
+    },
+    "noir": {
+        "name": "🕵️ Film Noir",
+        "description": "Phim noir cổ điển với bóng tối đặc trưng",
+        "prompt_template": """Film noir style: [MÔ TẢ CẢNH]. High contrast black and white or muted colors. Dramatic venetian blind shadows. Smoke and rain in dark urban settings. Jazz saxophone, piano noir soundtrack. Dutch angles, low-key lighting."""
+    },
+    "historical": {
+        "name": "🏰 Lịch sử/Period",
+        "description": "Phim lịch sử/cổ trang với bối cảnh thời đại",
+        "prompt_template": """Historical period piece: [MÔ TẢ CẢNH]. Authentic period costumes and architecture. Grand sweeping establishing shots. Elegant camera movements through period sets. Orchestral period-appropriate score. Rich warm color palette, painterly lighting."""
+    },
+    "war": {
+        "name": "⚔️ Chiến tranh/War",
+        "description": "Phim chiến tranh với cảnh chiến đấu khốc liệt",
+        "prompt_template": """War film: [MÔ TẢ CẢNH]. Intense handheld combat footage. Explosions and debris in slow motion. Desaturated gritty color grading. Powerful orchestral or electronic score. Quick cuts during action, lingering emotional moments."""
+    },
+    "musical": {
+        "name": "🎭 Ca nhạc/Musical",
+        "description": "Phim ca nhạc với vũ đạo và hát",
+        "prompt_template": """Musical film: [MÔ TẢ CẢNH]. Choreographed dance sequences with dynamic camera. Smooth tracking shots following performers. Colorful theatrical lighting and costumes. Original song performance with orchestra. Wide shots for full dance coverage, closeups for emotion."""
+    },
+    "educational": {
+        "name": "📚 Giáo dục/Educational",
+        "description": "Video giáo dục thông tin rõ ràng",
+        "prompt_template": """Educational video: [MÔ TẢ CHỦ ĐỀ]. Clear well-lit presentation setup. Animated graphics and diagrams appearing on screen. Professional talking head with B-roll illustrations. Calm informative background music. Clean modern color palette, readable text overlays."""
+    },
+    "gaming": {
+        "name": "🎮 Gaming/Esports",
+        "description": "Video gaming với năng lượng esports",
+        "prompt_template": """Gaming/Esports content: [MÔ TẢ CẢNH]. Dynamic RGB lighting and gaming setup. Quick cuts synced to gameplay highlights. Player reaction shots and intense focus moments. Electronic dubstep/trap soundtrack. Neon colors, high energy transitions."""
+    },
+    "wedding": {
+        "name": "💒 Đám cưới/Wedding",
+        "description": "Video đám cưới lãng mạn và xúc động",
+        "prompt_template": """Wedding cinematography: [MÔ TẢ CẢNH]. Romantic slow-motion emotional moments. Soft natural lighting with golden hour shots. Intimate vows and reactions captured. Elegant strings or acoustic love songs. Warm dreamy color grading, lens flares."""
+    },
+    "real_estate": {
+        "name": "🏠 Bất động sản",
+        "description": "Video bất động sản tour nhà chuyên nghiệp",
+        "prompt_template": """Real estate tour: [MÔ TẢ NGÔI NHÀ]. Smooth gimbal walkthrough of property. Wide-angle establishing exterior shots. Natural bright lighting showcasing spaces. Elegant ambient background music. Clean bright color grading, professional drone aerials."""
+    },
+    "timelapse": {
+        "name": "⏰ Timelapse",
+        "description": "Video timelapse với chuyển động thời gian",
+        "prompt_template": """Timelapse sequence: [MÔ TẢ CẢNH]. Accelerated motion of clouds, crowds, or construction. Hyperlapse moving through environments. Day to night transitions. Ambient electronic or classical soundtrack. Stabilized smooth motion, dramatic sky changes."""
+    },
+    "asmr": {
+        "name": "🎙️ ASMR",
+        "description": "Video ASMR với âm thanh thư giãn",
+        "prompt_template": """ASMR content: [MÔ TẢ CẢNH]. Extreme close-up macro shots. Slow deliberate movements and interactions. Crisp detailed audio of textures and sounds. Soft whispering or ambient silence. Warm intimate lighting, minimal background."""
+    },
+    "news": {
+        "name": "📰 Tin tức/News",
+        "description": "Video tin tức chuyên nghiệp",
+        "prompt_template": """News broadcast style: [MÔ TẢ CẢNH]. Professional studio lighting setup. Clean framing with graphics lower thirds. Steady tripod shots for interviews. Authoritative news music stingers. Blue and red accent colors, corporate clean look."""
+    },
+    "slow_motion": {
+        "name": "🐢 Slow Motion",
+        "description": "Video slow motion chi tiết",
+        "prompt_template": """Extreme slow motion: [MÔ TẢ CẢNH]. Ultra high-speed footage revealing hidden details. Dramatic lighting emphasizing textures. Water droplets, explosions, or impacts in super slow-mo. Ethereal ambient soundtrack. Crisp sharp detail, time manipulation."""
+    }
+}
+
 def read_prompts_from_file(file_path: str) -> List[str]:
     prompts: List[str] = []
     try:
@@ -7274,12 +7488,61 @@ class VideoGenerationTab(QWidget):
         v.setContentsMargins(0, 8, 0, 0)
         v.setSpacing(12)
 
+        # ===== PRESET STYLE COMBO BOX =====
+        preset_layout = QHBoxLayout()
+        preset_icon = QLabel("🎬")
+        preset_icon.setStyleSheet("font-size: 16px;")
+        preset_label = QLabel("Thể loại phim (VEO3 Style):")
+        preset_label.setStyleSheet("font-size: 13px; font-weight: 600; color: #475569;")
+        preset_layout.addWidget(preset_icon)
+        preset_layout.addWidget(preset_label)
+
+        self.style_preset_combo = QComboBox()
+        self.style_preset_combo.setMinimumWidth(280)
+        self.style_preset_combo.setStyleSheet("""
+            QComboBox {
+                padding: 8px 12px;
+                border: 2px solid #e2e8f0;
+                border-radius: 8px;
+                background-color: white;
+                font-size: 13px;
+            }
+            QComboBox:hover {
+                border-color: #6366f1;
+            }
+            QComboBox::drop-down {
+                border: none;
+                padding-right: 8px;
+            }
+        """)
+        # Thêm các preset vào combo box
+        for key, preset in VEO3_STYLE_PRESETS.items():
+            self.style_preset_combo.addItem(preset["name"], key)
+        self.style_preset_combo.currentIndexChanged.connect(self.on_style_preset_changed)
+        preset_layout.addWidget(self.style_preset_combo)
+        preset_layout.addStretch()
+        v.addLayout(preset_layout)
+
+        # ===== MÔ TẢ PRESET =====
+        self.preset_description_label = QLabel("")
+        self.preset_description_label.setStyleSheet("""
+            font-size: 11px; 
+            color: #64748b; 
+            font-style: italic;
+            padding: 4px 8px;
+            background-color: #f8fafc;
+            border-radius: 4px;
+        """)
+        self.preset_description_label.setWordWrap(True)
+        self.preset_description_label.hide()
+        v.addWidget(self.preset_description_label)
+
         label = QLabel("✏️ Prompt (mỗi dòng 1 prompt video):")
         label.setStyleSheet("font-size: 13px; font-weight: 600; color: #475569;")
         v.addWidget(label)
 
         self.text_prompt_edit = QTextEdit()
-        self.text_prompt_edit.setPlaceholderText("Mỗi dòng là 1 prompt video...")
+        self.text_prompt_edit.setPlaceholderText("Mỗi dòng là 1 prompt video...\n\n💡 Mẹo: Chọn thể loại phim ở trên để tự động điền mẫu prompt VEO3 chuyên nghiệp!")
         self.text_prompt_edit.textChanged.connect(self.update_text_prompt_count)
         v.addWidget(self.text_prompt_edit)
 
@@ -7305,6 +7568,48 @@ class VideoGenerationTab(QWidget):
         v.addLayout(btn_line)
 
         return w
+
+    def on_style_preset_changed(self, index):
+        """Xử lý khi người dùng chọn thể loại phim preset"""
+        preset_key = self.style_preset_combo.currentData()
+        if not preset_key or preset_key == "none":
+            self.preset_description_label.hide()
+            return
+
+        preset = VEO3_STYLE_PRESETS.get(preset_key)
+        if not preset:
+            self.preset_description_label.hide()
+            return
+
+        # Hiển thị mô tả preset
+        description = preset.get("description", "")
+        if description:
+            self.preset_description_label.setText(f"💡 {description}")
+            self.preset_description_label.show()
+        else:
+            self.preset_description_label.hide()
+
+        # Điền template prompt vào text area
+        template = preset.get("prompt_template", "")
+        if template:
+            current_text = self.text_prompt_edit.toPlainText().strip()
+            if current_text:
+                # Nếu đã có text, thêm vào dòng mới với khoảng cách đủ
+                if not current_text.endswith("\n"):
+                    current_text += "\n"
+                self.text_prompt_edit.setPlainText(current_text + template)
+            else:
+                # Nếu trống, điền template
+                self.text_prompt_edit.setPlainText(template)
+
+        # Reset combo về "Chọn thể loại" sau khi đã điền
+        self.style_preset_combo.blockSignals(True)
+        none_index = self.style_preset_combo.findData("none")
+        if none_index >= 0:
+            self.style_preset_combo.setCurrentIndex(none_index)
+        else:
+            self.style_preset_combo.setCurrentIndex(0)
+        self.style_preset_combo.blockSignals(False)
 
     def update_text_prompt_count(self):
         lines = self.text_prompt_edit.toPlainText().splitlines()
