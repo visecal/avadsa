@@ -7492,7 +7492,7 @@ class VideoGenerationTab(QWidget):
         preset_layout = QHBoxLayout()
         preset_icon = QLabel("🎬")
         preset_icon.setStyleSheet("font-size: 16px;")
-        preset_label = QLabel("Thể loại phim (VEO3 Style):")
+        preset_label = QLabel("🎬 Style chung cho tất cả prompts (VEO3 Style):")
         preset_label.setStyleSheet("font-size: 13px; font-weight: 600; color: #475569;")
         preset_layout.addWidget(preset_icon)
         preset_layout.addWidget(preset_label)
@@ -7520,18 +7520,41 @@ class VideoGenerationTab(QWidget):
             self.style_preset_combo.addItem(preset["name"], key)
         self.style_preset_combo.currentIndexChanged.connect(self.on_style_preset_changed)
         preset_layout.addWidget(self.style_preset_combo)
+        
+        # Nút xóa style đã chọn
+        self.clear_style_btn = QPushButton("✖ Xóa style")
+        self.clear_style_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #f1f5f9;
+                color: #64748b;
+                padding: 6px 12px;
+                border: 1px solid #e2e8f0;
+                border-radius: 6px;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #fee2e2;
+                color: #dc2626;
+                border-color: #fecaca;
+            }
+        """)
+        self.clear_style_btn.clicked.connect(self.clear_style_preset)
+        self.clear_style_btn.hide()  # Ẩn khi chưa chọn style
+        preset_layout.addWidget(self.clear_style_btn)
+        
         preset_layout.addStretch()
         v.addLayout(preset_layout)
 
-        # ===== MÔ TẢ PRESET =====
+        # ===== MÔ TẢ PRESET - Hiển thị style đã chọn =====
         self.preset_description_label = QLabel("")
         self.preset_description_label.setStyleSheet("""
-            font-size: 11px; 
-            color: #64748b; 
-            font-style: italic;
-            padding: 4px 8px;
-            background-color: #f8fafc;
-            border-radius: 4px;
+            font-size: 12px; 
+            color: #1e40af; 
+            font-weight: 500;
+            padding: 8px 12px;
+            background-color: #dbeafe;
+            border: 1px solid #93c5fd;
+            border-radius: 6px;
         """)
         self.preset_description_label.setWordWrap(True)
         self.preset_description_label.hide()
@@ -7542,7 +7565,7 @@ class VideoGenerationTab(QWidget):
         v.addWidget(label)
 
         self.text_prompt_edit = QTextEdit()
-        self.text_prompt_edit.setPlaceholderText("Mỗi dòng là 1 prompt video...\n\n💡 Mẹo: Chọn thể loại phim ở trên để tự động điền mẫu prompt VEO3 chuyên nghiệp!")
+        self.text_prompt_edit.setPlaceholderText("Mỗi dòng là 1 prompt video...\n\n💡 Mẹo: Chọn style phim ở trên (hoạt hình, quảng cáo, anime...) để tự động áp dụng cho TẤT CẢ prompts!")
         self.text_prompt_edit.textChanged.connect(self.update_text_prompt_count)
         v.addWidget(self.text_prompt_edit)
 
@@ -7570,39 +7593,35 @@ class VideoGenerationTab(QWidget):
         return w
 
     def on_style_preset_changed(self, index):
-        """Xử lý khi người dùng chọn thể loại phim preset"""
+        """Xử lý khi người dùng chọn thể loại phim preset - Style chung cho tất cả prompts"""
         preset_key = self.style_preset_combo.currentData()
         if not preset_key or preset_key == "none":
             self.preset_description_label.hide()
+            self.clear_style_btn.hide()
             return
 
         preset = VEO3_STYLE_PRESETS.get(preset_key)
         if not preset:
             self.preset_description_label.hide()
+            self.clear_style_btn.hide()
             return
 
-        # Hiển thị mô tả preset
+        # Hiển thị mô tả preset - Style này sẽ được áp dụng cho TẤT CẢ prompts
         description = preset.get("description", "")
         if description:
-            self.preset_description_label.setText(f"💡 {description}")
+            self.preset_description_label.setText(f"✨ Style đã chọn: {description}\n📝 Style này sẽ được áp dụng tự động cho tất cả prompts khi tạo video.")
             self.preset_description_label.show()
         else:
             self.preset_description_label.hide()
+        
+        # Hiển thị nút xóa style
+        self.clear_style_btn.show()
+        
+        # KHÔNG reset combo và KHÔNG thêm template vào textarea
+        # Style được lưu và sẽ được áp dụng trong collect_tasks
 
-        # Điền template prompt vào text area
-        template = preset.get("prompt_template", "")
-        if template:
-            current_text = self.text_prompt_edit.toPlainText().strip()
-            if current_text:
-                # Nếu đã có text, thêm vào dòng mới với khoảng cách đủ
-                if not current_text.endswith("\n"):
-                    current_text += "\n"
-                self.text_prompt_edit.setPlainText(current_text + template)
-            else:
-                # Nếu trống, điền template
-                self.text_prompt_edit.setPlainText(template)
-
-        # Reset combo về "Chọn thể loại" sau khi đã điền
+    def clear_style_preset(self):
+        """Xóa style đã chọn, reset về 'none'"""
         self.style_preset_combo.blockSignals(True)
         none_index = self.style_preset_combo.findData("none")
         if none_index >= 0:
@@ -7610,6 +7629,8 @@ class VideoGenerationTab(QWidget):
         else:
             self.style_preset_combo.setCurrentIndex(0)
         self.style_preset_combo.blockSignals(False)
+        self.preset_description_label.hide()
+        self.clear_style_btn.hide()
 
     def update_text_prompt_count(self):
         lines = self.text_prompt_edit.toPlainText().splitlines()
@@ -8047,9 +8068,37 @@ class VideoGenerationTab(QWidget):
                 QMessageBox.warning(self, "Thiếu Prompt", "Vui lòng nhập ít nhất 1 prompt (mỗi dòng 1 prompt).")
                 return []
             lines = [line.strip() for line in raw.splitlines() if line.strip()]
+            
+            # Lấy style preset đã chọn (nếu có)
+            style_template = ""
+            preset_key = self.style_preset_combo.currentData()
+            if preset_key and preset_key != "none":
+                preset = VEO3_STYLE_PRESETS.get(preset_key)
+                if preset:
+                    style_template = preset.get("prompt_template", "")
+            
             for line in lines:
+                # Áp dụng style template nếu có
+                if style_template:
+                    # Tìm và thay thế placeholder có dạng [MÔ TẢ ...] bằng prompt của user
+                    final_prompt = style_template
+                    
+                    # Tìm tất cả placeholder dạng [MÔ TẢ ...] hoặc [...] 
+                    placeholder_pattern = r'\[MÔ TẢ [^\]]+\]|\[[^\]]+\]'
+                    placeholders_found = re.findall(placeholder_pattern, final_prompt)
+                    
+                    if placeholders_found:
+                        # Thay thế placeholder đầu tiên tìm được bằng prompt của user
+                        final_prompt = final_prompt.replace(placeholders_found[0], line, 1)
+                    else:
+                        # Nếu không tìm thấy placeholder, thêm prompt vào đầu template với dấu chấm
+                        # Ví dụ: "A cat playing" + template -> "A cat playing. Pixar-style 3D animation..."
+                        final_prompt = f"{line}. {style_template}"
+                else:
+                    final_prompt = line
+                    
                 tasks.append({
-                    "prompt": line,
+                    "prompt": final_prompt,
                     "count": video_count,
                     "mode": mode_code
                 })
