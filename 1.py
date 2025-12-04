@@ -1323,24 +1323,16 @@ class WorkerThread(QThread):
 
     def download_video_with_ytdlp(self, url, out_dir, index):
         base_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
-        
-        # --- SỬA LỖI WINERROR 193 ---
-        # Tuyệt đối không tìm file yt-dlp.exe nữa vì file trong máy bạn đang bị lỗi
-        # Luôn luôn gọi thông qua python module
-        cmd_base = [sys.executable, "-m", "yt_dlp"]
-
-        # Tìm ffmpeg (cái này vẫn cần thiết)
+        yt_dlp_path = os.path.join(base_dir, "yt-dlp.exe")
+        if not os.path.exists(yt_dlp_path):
+            yt_dlp_path = "yt-dlp"
         ffmpeg_path = os.path.join(base_dir, "ffmpeg.exe")
         if not os.path.exists(ffmpeg_path):
             ffmpeg_path = "ffmpeg"
-
         base_name = f"flow_vid_{index}"
         out_path = os.path.join(out_dir, f"{base_name}.mp4")
-        
-        # In lệnh ra log để debug nếu cần
-        # print(f"Executing: {cmd_base} output to {out_path}")
-
-        cmd = cmd_base + [
+        cmd = [
+            yt_dlp_path,
             "--no-update",
             "--no-cache-dir",
             "--no-check-certificates",
@@ -1350,12 +1342,10 @@ class WorkerThread(QThread):
             "--ffmpeg-location", ffmpeg_path,
             url
         ]
-        
         try:
             creation_flags = 0
             if sys.platform == "win32":
                 creation_flags = subprocess.CREATE_NO_WINDOW
-            
             res = subprocess.run(
                 cmd,
                 stdout=subprocess.PIPE,
@@ -1364,18 +1354,10 @@ class WorkerThread(QThread):
                 check=False,
                 creationflags=creation_flags
             )
-            
-            # Nếu tải thất bại, log lại để biết nhưng không crash
-            if res.returncode != 0:
-                pass 
-                # self.log_message.emit(f"Yt-dlp warning: {res.stderr}", "warning")
-
             if res.returncode == 0 and os.path.exists(out_path) and os.path.getsize(out_path) > 0:
                 return out_path
         except Exception as e:
             self.log_message.emit(f"Lỗi yt-dlp subprocess: {e}", "error")
-            
-        # Fallback: Tải bằng requests nếu yt-dlp thất bại
         try:
             resp = requests.get(url, stream=True, timeout=300, verify=False)
             if resp.status_code == 200:
@@ -1561,11 +1543,9 @@ class WorkerThread(QThread):
                                       quality: str = "1080p", log_prefix: str = ""):
         prefix = log_prefix or ""
         base_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
-        
-        # --- SỬA LỖI WINERROR 193 ---
-        # Luôn chạy bằng python module
-        cmd_base = [sys.executable, "-m", "yt_dlp"]
-
+        yt_dlp_path = os.path.join(base_dir, "yt-dlp.exe")
+        if not os.path.exists(yt_dlp_path):
+            yt_dlp_path = "yt-dlp"
         ffmpeg_path = os.path.join(base_dir, "ffmpeg.exe")
         if not os.path.exists(ffmpeg_path):
             ffmpeg_path = "ffmpeg"
@@ -1584,7 +1564,8 @@ class WorkerThread(QThread):
         base_name = f"flow_vid_task_{task_id}_tile_{tile_index}"
         out_tpl = str(output_dir / (base_name + ".%(ext)s"))
 
-        cmd = cmd_base + [
+        cmd = [
+            yt_dlp_path,
             "--no-update",
             "--no-cache-dir",
             "--no-check-certificates",
@@ -1607,8 +1588,12 @@ class WorkerThread(QThread):
                 check=False,
                 creationflags=creation_flags
             )
-            
-            if res.returncode == 0:
+            if res.returncode != 0:
+                self.log_queue.put({
+                    "type": "warning",
+                    "message": f"{prefix}Task {task_id}: yt-dlp lỗi tile {tile_index}, code={res.returncode}."
+                })
+            else:
                 for file in output_dir.glob(base_name + ".*"):
                     if file.is_file() and file.stat().st_size > 0:
                         try:
@@ -1616,12 +1601,6 @@ class WorkerThread(QThread):
                                 return f.read()
                         except Exception:
                             break
-            else:
-                 # Log nhẹ warning
-                 self.log_queue.put({
-                    "type": "warning",
-                    "message": f"{prefix}Task {task_id}: yt-dlp trả về code {res.returncode}. (Thử fallback)"
-                })
 
         except Exception as e:
             self.log_queue.put({
@@ -1629,7 +1608,6 @@ class WorkerThread(QThread):
                 "message": f"{prefix}Task {task_id}: Lỗi yt-dlp tile {tile_index} – {e}"
             })
 
-        # Fallback requests
         try:
             fallback_name = f"{base_name}_fallback.mp4"
             fallback_path = output_dir / fallback_name
@@ -3630,10 +3608,7 @@ class ScriptWritingTab(QWidget):
             return
         
         # Prepare prompt
-        prompt = """Đọc câu chuyện sau và tạo ra một kịch bản để tạo video với AI có thể truyền tải đúng nội dung.
-Chia thành các kịch bản theo thứ tự phù hợp với video 8 giây.
-Mỗi kịch bản là 1 dòng.
-Kết quả là văn bản thuần túy, KHÔNG thêm lời dẫn, chú thích, markdown, in đậm/in nghiêng."""
+        prompt = """"""
         
         # Update UI
         self.generate_btn.setEnabled(False)
@@ -4236,6 +4211,46 @@ class AccountManager(QMainWindow):
         browse_output_btn.clicked.connect(self.browse_output_folder)
         output_layout.addWidget(browse_output_btn)
         control_layout.addLayout(output_layout)
+        
+        # Style Prompt Section
+        style_divider = QFrame()
+        style_divider.setObjectName("divider")
+        style_divider.setFixedHeight(1)
+        control_layout.addWidget(style_divider)
+        
+        style_header = QHBoxLayout()
+        style_icon = QLabel("🎨")
+        style_icon.setStyleSheet("font-size: 16px;")
+        style_title = QLabel("Style Prompt")
+        style_title.setStyleSheet("font-size: 14px; font-weight: bold; color: #1e293b;")
+        style_header.addWidget(style_icon)
+        style_header.addWidget(style_title)
+        style_header.addStretch()
+        control_layout.addLayout(style_header)
+        
+        self.style_prompt_edit = QTextEdit()
+        self.style_prompt_edit.setObjectName("modernLineEdit")
+        self.style_prompt_edit.setPlaceholderText("Nhập style chung cho tất cả prompt...\n\nVí dụ: cinematic, 4K, realistic lighting, dramatic atmosphere")
+        self.style_prompt_edit.setMaximumHeight(80)
+        self.style_prompt_edit.setStyleSheet("""
+            QTextEdit {
+                background-color: #f8fafc;
+                border: 2px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 8px;
+                color: #1e293b;
+                font-size: 12px;
+            }
+            QTextEdit:focus {
+                border-color: #6366f1;
+                background-color: #ffffff;
+            }
+        """)
+        control_layout.addWidget(self.style_prompt_edit)
+        
+        style_info = QLabel("💡 Style sẽ được ghép vào đầu mỗi prompt")
+        style_info.setStyleSheet("color: #64748b; font-size: 11px; font-style: italic;")
+        control_layout.addWidget(style_info)
         
         # Checkbox options
         options_layout = QVBoxLayout()
@@ -4961,8 +4976,15 @@ class AccountManager(QMainWindow):
         self.log_widget.add_log(message, "info")
 
     # --- LOGIC THÊM TASK VÀO HÀNG CHỜ (MỚI) ---
+    def get_style_prompt(self):
+        """Lấy style prompt từ UI, trả về chuỗi đã strip"""
+        if hasattr(self, 'style_prompt_edit'):
+            return self.style_prompt_edit.toPlainText().strip().replace('\n', ' ').strip()
+        return ""
+    
     def add_image_task_to_queue(self):
-        prompts = self.image_tab.get_prompts()
+        style_prefix = self.get_style_prompt()
+        prompts = self.image_tab.get_prompts(style_prefix)
         if not prompts:
             QMessageBox.warning(self, "Lỗi", "Vui lòng nhập Prompt!")
             return
@@ -4979,7 +5001,8 @@ class AccountManager(QMainWindow):
                 self.result_table.tasks[task_id]["mode"] = "image"
 
         self.image_tab.prompt_text.clear()
-        self.log_widget.add_log(f"Đã thêm {len(prompts)} task (x{count} ảnh) vào hàng chờ.", "info")
+        style_log = f" (với style: {style_prefix[:30]}...)" if style_prefix else ""
+        self.log_widget.add_log(f"Đã thêm {len(prompts)} task (x{count} ảnh) vào hàng chờ{style_log}.", "info")
 
         if self.stop_btn.isEnabled():
             self.enqueue_new_waiting_tasks()
@@ -4992,12 +5015,20 @@ class AccountManager(QMainWindow):
         model = self.video_tab.model_combo.currentText()
         ratio = self.video_tab.ratio_combo.currentText()
         quality_is_1080 = self.video_tab.quality_combo.currentIndex() == 1
+        
+        # Lấy style prefix
+        style_prefix = self.get_style_prompt()
 
         added = 0
         for t in tasks:
             prompt = t.get("prompt", "").strip()
             if not prompt:
                 continue
+            
+            # Ghép style prefix vào prompt nếu có
+            if style_prefix:
+                prompt = f"{style_prefix}, {prompt}"
+            
             count = int(t.get("count", 1)) if t.get("count", 1) else 1
             task_id = f"VID_{int(time.time())}_{len(self.result_table.tasks) + 1}"
             self.result_table.add_task(task_id, model, ratio, prompt, count)
@@ -5028,7 +5059,8 @@ class AccountManager(QMainWindow):
             added += 1
 
         if added > 0:
-            self.log_widget.add_log(f"Đã thêm {added} task video vào hàng chờ.", "info")
+            style_log = f" (với style: {style_prefix[:30]}...)" if style_prefix else ""
+            self.log_widget.add_log(f"Đã thêm {added} task video vào hàng chờ{style_log}.", "info")
         else:
             QMessageBox.warning(self, "Lỗi", "Không có tác vụ video hợp lệ để thêm vào bảng.")
             return
@@ -5948,6 +5980,7 @@ class AccountManager(QMainWindow):
             'prompt_delay': float(self.prompt_delay_spin.value()),
             'task_timeout_seconds': self.task_timeout_seconds,
             'output_folder': self.output_path.text(),
+            'style_prompt': self.style_prompt_edit.toPlainText() if hasattr(self, 'style_prompt_edit') else '',
             'upscale': self.upscale_check.isChecked(),
             'direct_project': self.direct_project_check.isChecked(),
             'chrome_profile': self.account_tab.profile_path.text(),
@@ -6013,6 +6046,8 @@ class AccountManager(QMainWindow):
             if 'output_folder' in config: 
                 self.output_path.setText(config['output_folder'])
                 self.output_folder = config['output_folder']
+            if 'style_prompt' in config and hasattr(self, 'style_prompt_edit'):
+                self.style_prompt_edit.setPlainText(config['style_prompt'])
             if 'upscale' in config:
                 self.upscale_check.setChecked(config['upscale'])
             if 'direct_project' in config and hasattr(self, 'direct_project_check'):
@@ -6950,10 +6985,13 @@ class ImageGenerationTab(QWidget):
             except Exception as e:
                 QMessageBox.critical(self, "Lỗi", f"Không thể đọc file: {str(e)}")
                 
-    def get_prompts(self):
+    def get_prompts(self, style_prefix=""):
         text = self.prompt_text.toPlainText().strip()
         if not text: return []
-        return [line.strip() for line in text.split('\n') if line.strip()]
+        prompts = [line.strip() for line in text.split('\n') if line.strip()]
+        if style_prefix:
+            prompts = [f"{style_prefix}, {p}" for p in prompts]
+        return prompts
 
 class ReferencePromptHighlighter(QSyntaxHighlighter):
     def __init__(self, document):
