@@ -3061,14 +3061,844 @@ class WorkerThread(QThread):
         finally:
             pass
 
-class ScriptWritingTab(QWidget):
+class GeminiAPIManager:
+    """Class quản lý API key và gọi Gemini API (sử dụng class methods)"""
+    _api_key = ""
+    _model = "gemini-2.5-flash"
+    _genai_module = None  # Cache the import
+    
+    @classmethod
+    def _get_genai(cls):
+        """Lazy import và cache google.generativeai module"""
+        if cls._genai_module is None:
+            try:
+                import google.generativeai as genai
+                cls._genai_module = genai
+            except ImportError:
+                return None
+        return cls._genai_module
+    
+    @classmethod
+    def set_api_key(cls, key):
+        cls._api_key = key.strip()
+    
+    @classmethod
+    def get_api_key(cls):
+        return cls._api_key
+    
+    @classmethod
+    def set_model(cls, model):
+        cls._model = model
+    
+    @classmethod
+    def get_model(cls):
+        return cls._model
+    
+    @classmethod
+    def call_gemini(cls, prompt, content=""):
+        """Gọi Gemini API để tạo nội dung"""
+        if not cls._api_key:
+            return None, "Chưa cài đặt API Key Gemini. Vui lòng vào tab Cài Đặt API để nhập key."
+        
+        genai = cls._get_genai()
+        if genai is None:
+            return None, "Thư viện google-generativeai chưa được cài đặt. Vui lòng cài đặt bằng lệnh: pip install google-generativeai"
+        
+        try:
+            genai.configure(api_key=cls._api_key)
+            
+            model = genai.GenerativeModel(cls._model)
+            
+            if content:
+                full_prompt = f"{prompt}\n\n{content}"
+            else:
+                full_prompt = prompt
+            
+            response = model.generate_content(full_prompt)
+            return response.text, None
+        except Exception as e:
+            return None, f"Lỗi gọi Gemini API: {str(e)}"
+    
+    @classmethod
+    def analyze_youtube(cls, youtube_url, prompt=""):
+        """Phân tích video YouTube với Gemini"""
+        if not cls._api_key:
+            return None, "Chưa cài đặt API Key Gemini. Vui lòng vào tab Cài Đặt API để nhập key."
+        
+        genai = cls._get_genai()
+        if genai is None:
+            return None, "Thư viện google-generativeai chưa được cài đặt. Vui lòng cài đặt bằng lệnh: pip install google-generativeai"
+        
+        try:
+            genai.configure(api_key=cls._api_key)
+            
+            model = genai.GenerativeModel(cls._model)
+            
+            default_prompt = """Hãy xem video này và tạo ra một kịch bản để tạo video AI có thể truyền tải đúng nội dung.
+Chia thành các kịch bản theo thứ tự phù hợp với video 8 giây.
+Mỗi kịch bản là 1 dòng.
+Kết quả là văn bản thuần túy, KHÔNG thêm lời dẫn, chú thích, markdown, in đậm/in nghiêng."""
+            
+            if prompt:
+                full_prompt = prompt
+            else:
+                full_prompt = default_prompt
+            
+            # Gemini 1.5+ có thể xử lý YouTube URLs trực tiếp
+            # Gửi URL như một phần của content
+            response = model.generate_content([youtube_url, full_prompt])
+            return response.text, None
+        except Exception as e:
+            error_msg = str(e)
+            # Cung cấp hướng dẫn hữu ích nếu có lỗi
+            if "not supported" in error_msg.lower() or "invalid" in error_msg.lower():
+                return None, f"Lỗi: Model {cls._model} có thể không hỗ trợ phân tích video trực tiếp. Thử đổi sang gemini-1.5-flash-latest hoặc gemini-1.5-pro-latest. Chi tiết: {error_msg}"
+            return None, f"Lỗi phân tích YouTube: {error_msg}"
+
+
+class GeminiWorker(QThread):
+    """Worker thread để gọi Gemini API không block UI"""
+    finished = Signal(str, str)  # (result, error)
+    
+    def __init__(self, task_type, **kwargs):
+        super().__init__()
+        self.task_type = task_type
+        self.kwargs = kwargs
+    
+    def run(self):
+        if self.task_type == "generate_script":
+            prompt = self.kwargs.get("prompt", "")
+            content = self.kwargs.get("content", "")
+            result, error = GeminiAPIManager.call_gemini(prompt, content)
+        elif self.task_type == "analyze_youtube":
+            youtube_url = self.kwargs.get("youtube_url", "")
+            prompt = self.kwargs.get("prompt", "")
+            result, error = GeminiAPIManager.analyze_youtube(youtube_url, prompt)
+        else:
+            result, error = None, "Unknown task type"
+        
+        self.finished.emit(result or "", error or "")
+
+
+class GeminiSettingsTab(QWidget):
+    """Tab cài đặt API Key Gemini"""
     def __init__(self):
         super().__init__()
+        self.init_ui()
+    
+    def init_ui(self):
         layout = QVBoxLayout()
-        label = QLabel("Chức năng Viết Kịch Bản (Đang phát triển)")
-        label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(label)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(16)
+        
+        # Header
+        header = QHBoxLayout()
+        icon = QLabel("🔑")
+        icon.setStyleSheet("font-size: 24px;")
+        title = QLabel("Cài Đặt Gemini API")
+        title.setStyleSheet("font-size: 18px; font-weight: bold; color: #1e293b;")
+        header.addWidget(icon)
+        header.addWidget(title)
+        header.addStretch()
+        layout.addLayout(header)
+        
+        # Info box
+        info_box = QFrame()
+        info_box.setStyleSheet("""
+            QFrame {
+                background-color: #DBEAFE;
+                border: 1px solid #93C5FD;
+                border-radius: 8px;
+                padding: 12px;
+            }
+        """)
+        info_layout = QVBoxLayout(info_box)
+        info_lbl = QLabel("""
+            <b>🔑 Gemini API Key</b><br><br>
+            API Key dùng để gọi các tính năng AI của Google Gemini:<br>
+            • <b>Tab Tạo Kịch Bản:</b> Tạo kịch bản video từ câu chuyện<br>
+            • <b>Tab Phân Tích YouTube:</b> Phân tích và trích xuất nội dung video<br><br>
+            📌 Lấy API Key miễn phí tại: <a href="https://aistudio.google.com/apikey">https://aistudio.google.com/apikey</a>
+        """)
+        info_lbl.setWordWrap(True)
+        info_lbl.setOpenExternalLinks(True)
+        info_layout.addWidget(info_lbl)
+        layout.addWidget(info_box)
+        
+        # API Key input
+        key_group = QFrame()
+        key_group.setStyleSheet("""
+            QFrame {
+                background-color: #F8FAFC;
+                border: 1px solid #E2E8F0;
+                border-radius: 8px;
+                padding: 16px;
+            }
+        """)
+        key_layout = QVBoxLayout(key_group)
+        
+        key_label = QLabel("API Key:")
+        key_label.setStyleSheet("font-weight: 600; color: #475569;")
+        key_layout.addWidget(key_label)
+        
+        self.api_key_input = QLineEdit()
+        self.api_key_input.setPlaceholderText("AIzaSy...")
+        self.api_key_input.setEchoMode(QLineEdit.Password)
+        self.api_key_input.setStyleSheet("""
+            QLineEdit {
+                padding: 12px;
+                border: 2px solid #E2E8F0;
+                border-radius: 8px;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border-color: #6366F1;
+            }
+        """)
+        key_layout.addWidget(self.api_key_input)
+        
+        # Show/Hide toggle
+        self.show_key_check = QCheckBox("Hiển thị API Key")
+        self.show_key_check.stateChanged.connect(self.toggle_key_visibility)
+        key_layout.addWidget(self.show_key_check)
+        
+        layout.addWidget(key_group)
+        
+        # Model selection
+        model_group = QFrame()
+        model_group.setStyleSheet("""
+            QFrame {
+                background-color: #F8FAFC;
+                border: 1px solid #E2E8F0;
+                border-radius: 8px;
+                padding: 16px;
+            }
+        """)
+        model_layout = QVBoxLayout(model_group)
+        
+        model_label = QLabel("Model Gemini:")
+        model_label.setStyleSheet("font-weight: 600; color: #475569;")
+        model_layout.addWidget(model_label)
+        
+        self.model_combo = QComboBox()
+        self.model_combo.addItems([
+            "gemini-2.5-flash",
+            "gemini-2.5-pro",
+            "gemini-1.5-flash-latest",
+            "gemini-1.5-pro-latest"
+        ])
+        self.model_combo.setStyleSheet("""
+            QComboBox {
+                padding: 10px;
+                border: 2px solid #E2E8F0;
+                border-radius: 8px;
+                font-size: 14px;
+            }
+        """)
+        model_layout.addWidget(self.model_combo)
+        
+        model_info = QLabel("💡 gemini-2.5-flash: Nhanh và miễn phí | gemini-2.5-pro: Chất lượng cao hơn")
+        model_info.setStyleSheet("color: #64748B; font-size: 12px;")
+        model_layout.addWidget(model_info)
+        
+        layout.addWidget(model_group)
+        
+        # Buttons
+        btn_layout = QHBoxLayout()
+        
+        self.save_btn = QPushButton("💾 Lưu Cài Đặt")
+        self.save_btn.setCursor(Qt.PointingHandCursor)
+        self.save_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #10B981, stop:1 #059669);
+                color: white;
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-weight: 600;
+                font-size: 14px;
+                border: none;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #059669, stop:1 #047857);
+            }
+        """)
+        self.save_btn.clicked.connect(self.save_settings)
+        btn_layout.addWidget(self.save_btn)
+        
+        self.test_btn = QPushButton("🧪 Test API Key")
+        self.test_btn.setCursor(Qt.PointingHandCursor)
+        self.test_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #3B82F6, stop:1 #2563EB);
+                color: white;
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-weight: 600;
+                font-size: 14px;
+                border: none;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #2563EB, stop:1 #1D4ED8);
+            }
+        """)
+        self.test_btn.clicked.connect(self.test_api_key)
+        btn_layout.addWidget(self.test_btn)
+        
+        btn_layout.addStretch()
+        layout.addLayout(btn_layout)
+        
+        # Status label
+        self.status_label = QLabel("")
+        self.status_label.setStyleSheet("font-size: 13px; padding: 8px;")
+        layout.addWidget(self.status_label)
+        
+        layout.addStretch()
         self.setLayout(layout)
+        
+        # Load saved settings
+        self.load_settings()
+    
+    def toggle_key_visibility(self, state):
+        if state == 2:  # Checked
+            self.api_key_input.setEchoMode(QLineEdit.Normal)
+        else:
+            self.api_key_input.setEchoMode(QLineEdit.Password)
+    
+    def save_settings(self):
+        api_key = self.api_key_input.text().strip()
+        model = self.model_combo.currentText()
+        
+        if not api_key:
+            self.status_label.setText("⚠️ Vui lòng nhập API Key!")
+            self.status_label.setStyleSheet("color: #D97706; font-size: 13px; padding: 8px;")
+            return
+        
+        GeminiAPIManager.set_api_key(api_key)
+        GeminiAPIManager.set_model(model)
+        
+        self.status_label.setText("✅ Đã lưu cài đặt thành công!")
+        self.status_label.setStyleSheet("color: #10B981; font-size: 13px; padding: 8px;")
+    
+    def load_settings(self):
+        # Load from GeminiAPIManager
+        api_key = GeminiAPIManager.get_api_key()
+        model = GeminiAPIManager.get_model()
+        
+        if api_key:
+            self.api_key_input.setText(api_key)
+        
+        index = self.model_combo.findText(model)
+        if index >= 0:
+            self.model_combo.setCurrentIndex(index)
+    
+    def test_api_key(self):
+        api_key = self.api_key_input.text().strip()
+        if not api_key:
+            self.status_label.setText("⚠️ Vui lòng nhập API Key trước!")
+            self.status_label.setStyleSheet("color: #D97706; font-size: 13px; padding: 8px;")
+            return
+        
+        self.status_label.setText("⏳ Đang kiểm tra API Key...")
+        self.status_label.setStyleSheet("color: #3B82F6; font-size: 13px; padding: 8px;")
+        self.test_btn.setEnabled(False)
+        QApplication.processEvents()
+        
+        # Temporarily set the key for testing
+        old_key = GeminiAPIManager.get_api_key()
+        GeminiAPIManager.set_api_key(api_key)
+        GeminiAPIManager.set_model(self.model_combo.currentText())
+        
+        result, error = GeminiAPIManager.call_gemini("Nói 'Xin chào' bằng tiếng Việt.")
+        
+        if error:
+            self.status_label.setText(f"❌ Lỗi: {error}")
+            self.status_label.setStyleSheet("color: #DC2626; font-size: 13px; padding: 8px;")
+            GeminiAPIManager.set_api_key(old_key)
+        else:
+            self.status_label.setText(f"✅ API Key hoạt động! Phản hồi: {result[:100]}...")
+            self.status_label.setStyleSheet("color: #10B981; font-size: 13px; padding: 8px;")
+        
+        self.test_btn.setEnabled(True)
+
+
+class ScriptWritingTab(QWidget):
+    """Tab tạo kịch bản với Gemini AI"""
+    def __init__(self):
+        super().__init__()
+        self.worker = None
+        self.init_ui()
+    
+    def init_ui(self):
+        layout = QVBoxLayout()
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(16)
+        
+        # Header
+        header = QHBoxLayout()
+        icon = QLabel("📝")
+        icon.setStyleSheet("font-size: 24px;")
+        title = QLabel("Tạo Kịch Bản Video AI")
+        title.setStyleSheet("font-size: 18px; font-weight: bold; color: #1e293b;")
+        header.addWidget(icon)
+        header.addWidget(title)
+        header.addStretch()
+        layout.addLayout(header)
+        
+        # Info box
+        info_box = QFrame()
+        info_box.setStyleSheet("""
+            QFrame {
+                background-color: #FEF3C7;
+                border: 1px solid #FCD34D;
+                border-radius: 8px;
+                padding: 12px;
+            }
+        """)
+        info_layout = QVBoxLayout(info_box)
+        info_lbl = QLabel("""
+            <b>📝 Tạo Kịch Bản từ Câu Chuyện</b><br>
+            Nhập câu chuyện hoặc nội dung văn bản, AI sẽ tạo ra kịch bản phù hợp để làm video.<br>
+            Mỗi kịch bản tương ứng với một video 8 giây.
+        """)
+        info_lbl.setWordWrap(True)
+        info_layout.addWidget(info_lbl)
+        layout.addWidget(info_box)
+        
+        # Input section
+        input_group = QFrame()
+        input_group.setStyleSheet("""
+            QFrame {
+                background-color: #F8FAFC;
+                border: 1px solid #E2E8F0;
+                border-radius: 8px;
+                padding: 16px;
+            }
+        """)
+        input_layout = QVBoxLayout(input_group)
+        
+        # Input method selection
+        method_layout = QHBoxLayout()
+        self.text_radio = QRadioButton("Nhập văn bản trực tiếp")
+        self.file_radio = QRadioButton("Chọn file TXT")
+        self.text_radio.setChecked(True)
+        self.text_radio.toggled.connect(self.toggle_input_method)
+        method_layout.addWidget(self.text_radio)
+        method_layout.addWidget(self.file_radio)
+        method_layout.addStretch()
+        input_layout.addLayout(method_layout)
+        
+        # Text input
+        self.input_stack = QWidget()
+        stack_layout = QVBoxLayout(self.input_stack)
+        stack_layout.setContentsMargins(0, 0, 0, 0)
+        
+        self.text_input = QTextEdit()
+        self.text_input.setPlaceholderText("Nhập câu chuyện hoặc nội dung cần tạo kịch bản...\n\nVí dụ:\nMột buổi sáng mùa thu, cô gái trẻ đi dạo trong công viên. Lá vàng rơi khắp nơi, tạo nên khung cảnh thơ mộng. Cô ngồi xuống ghế đá, nhìn những đứa trẻ chơi đùa...")
+        self.text_input.setMinimumHeight(150)
+        stack_layout.addWidget(self.text_input)
+        
+        # File input (hidden by default)
+        self.file_widget = QWidget()
+        file_layout = QHBoxLayout(self.file_widget)
+        file_layout.setContentsMargins(0, 0, 0, 0)
+        self.file_path_edit = QLineEdit()
+        self.file_path_edit.setPlaceholderText("Chọn file TXT...")
+        self.file_path_edit.setReadOnly(True)
+        file_layout.addWidget(self.file_path_edit)
+        
+        browse_btn = QPushButton("📂 Chọn File")
+        browse_btn.clicked.connect(self.browse_file)
+        file_layout.addWidget(browse_btn)
+        self.file_widget.hide()
+        stack_layout.addWidget(self.file_widget)
+        
+        input_layout.addWidget(self.input_stack)
+        layout.addWidget(input_group)
+        
+        # Generate button
+        btn_layout = QHBoxLayout()
+        
+        self.generate_btn = QPushButton("✨ Tạo Kịch Bản")
+        self.generate_btn.setCursor(Qt.PointingHandCursor)
+        self.generate_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #8B5CF6, stop:1 #7C3AED);
+                color: white;
+                padding: 14px 28px;
+                border-radius: 8px;
+                font-weight: 700;
+                font-size: 15px;
+                border: none;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #7C3AED, stop:1 #6D28D9);
+            }
+            QPushButton:disabled {
+                background: #94A3B8;
+            }
+        """)
+        self.generate_btn.clicked.connect(self.generate_script)
+        btn_layout.addWidget(self.generate_btn)
+        
+        self.copy_btn = QPushButton("📋 Copy Kết Quả")
+        self.copy_btn.setCursor(Qt.PointingHandCursor)
+        self.copy_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #10B981, stop:1 #059669);
+                color: white;
+                padding: 14px 28px;
+                border-radius: 8px;
+                font-weight: 600;
+                font-size: 14px;
+                border: none;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #059669, stop:1 #047857);
+            }
+        """)
+        self.copy_btn.clicked.connect(self.copy_result)
+        btn_layout.addWidget(self.copy_btn)
+        
+        btn_layout.addStretch()
+        layout.addLayout(btn_layout)
+        
+        # Output section
+        output_label = QLabel("📋 Kết Quả Kịch Bản:")
+        output_label.setStyleSheet("font-weight: 600; color: #475569; font-size: 14px;")
+        layout.addWidget(output_label)
+        
+        self.output_text = QTextEdit()
+        self.output_text.setReadOnly(True)
+        self.output_text.setPlaceholderText("Kết quả kịch bản sẽ hiển thị ở đây...")
+        self.output_text.setStyleSheet("""
+            QTextEdit {
+                background-color: #F8FAFC;
+                border: 2px solid #E2E8F0;
+                border-radius: 8px;
+                padding: 12px;
+                font-size: 13px;
+                line-height: 1.6;
+            }
+        """)
+        layout.addWidget(self.output_text)
+        
+        # Status
+        self.status_label = QLabel("")
+        self.status_label.setStyleSheet("color: #64748B; font-size: 12px;")
+        layout.addWidget(self.status_label)
+        
+        self.setLayout(layout)
+    
+    def toggle_input_method(self, checked):
+        if checked:  # Text input
+            self.text_input.show()
+            self.file_widget.hide()
+        else:  # File input
+            self.text_input.hide()
+            self.file_widget.show()
+    
+    def browse_file(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Chọn file văn bản", "", "Text Files (*.txt);;All Files (*)"
+        )
+        if file_path:
+            self.file_path_edit.setText(file_path)
+    
+    def generate_script(self):
+        # Get input content
+        if self.text_radio.isChecked():
+            content = self.text_input.toPlainText().strip()
+        else:
+            file_path = self.file_path_edit.text().strip()
+            if not file_path or not os.path.exists(file_path):
+                QMessageBox.warning(self, "Lỗi", "Vui lòng chọn file TXT hợp lệ!")
+                return
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read().strip()
+            except Exception as e:
+                QMessageBox.warning(self, "Lỗi", f"Không thể đọc file: {str(e)}")
+                return
+        
+        if not content:
+            QMessageBox.warning(self, "Thiếu Nội Dung", "Vui lòng nhập nội dung hoặc chọn file!")
+            return
+        
+        # Check API key
+        if not GeminiAPIManager.get_api_key():
+            QMessageBox.warning(self, "Thiếu API Key", "Vui lòng cài đặt Gemini API Key trước!\nVào tab 'Cài Đặt API' để nhập key.")
+            return
+        
+        # Prepare prompt
+        prompt = """Đọc câu chuyện sau và tạo ra một kịch bản để tạo video với AI có thể truyền tải đúng nội dung.
+Chia thành các kịch bản theo thứ tự phù hợp với video 8 giây.
+Mỗi kịch bản là 1 dòng.
+Kết quả là văn bản thuần túy, KHÔNG thêm lời dẫn, chú thích, markdown, in đậm/in nghiêng."""
+        
+        # Update UI
+        self.generate_btn.setEnabled(False)
+        self.status_label.setText("⏳ Đang tạo kịch bản với AI...")
+        self.status_label.setStyleSheet("color: #3B82F6; font-size: 12px;")
+        self.output_text.setPlainText("")
+        QApplication.processEvents()
+        
+        # Start worker thread
+        self.worker = GeminiWorker("generate_script", prompt=prompt, content=content)
+        self.worker.finished.connect(self.on_script_generated)
+        self.worker.start()
+    
+    def on_script_generated(self, result, error):
+        self.generate_btn.setEnabled(True)
+        
+        if error:
+            self.status_label.setText(f"❌ Lỗi: {error}")
+            self.status_label.setStyleSheet("color: #DC2626; font-size: 12px;")
+            QMessageBox.warning(self, "Lỗi", error)
+        else:
+            self.output_text.setPlainText(result)
+            lines = len(result.strip().split('\n'))
+            self.status_label.setText(f"✅ Đã tạo {lines} kịch bản thành công!")
+            self.status_label.setStyleSheet("color: #10B981; font-size: 12px;")
+    
+    def copy_result(self):
+        text = self.output_text.toPlainText()
+        if text:
+            QApplication.clipboard().setText(text)
+            self.status_label.setText("📋 Đã copy vào clipboard!")
+            self.status_label.setStyleSheet("color: #10B981; font-size: 12px;")
+        else:
+            QMessageBox.information(self, "Thông báo", "Chưa có kết quả để copy!")
+
+
+class YouTubeAnalysisTab(QWidget):
+    """Tab phân tích video YouTube với Gemini"""
+    def __init__(self):
+        super().__init__()
+        self.worker = None
+        self.init_ui()
+    
+    def init_ui(self):
+        layout = QVBoxLayout()
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(16)
+        
+        # Header
+        header = QHBoxLayout()
+        icon = QLabel("📺")
+        icon.setStyleSheet("font-size: 24px;")
+        title = QLabel("Phân Tích Video YouTube")
+        title.setStyleSheet("font-size: 18px; font-weight: bold; color: #1e293b;")
+        header.addWidget(icon)
+        header.addWidget(title)
+        header.addStretch()
+        layout.addLayout(header)
+        
+        # Info box
+        info_box = QFrame()
+        info_box.setStyleSheet("""
+            QFrame {
+                background-color: #DCFCE7;
+                border: 1px solid #86EFAC;
+                border-radius: 8px;
+                padding: 12px;
+            }
+        """)
+        info_layout = QVBoxLayout(info_box)
+        info_lbl = QLabel("""
+            <b>📺 Phân Tích Video YouTube với AI</b><br>
+            Nhập link YouTube, Gemini sẽ xem video và tạo kịch bản tương ứng để bạn tái tạo video bằng AI.<br>
+            Chỉ cần paste link là có thể lấy kịch bản ngay!
+        """)
+        info_lbl.setWordWrap(True)
+        info_layout.addWidget(info_lbl)
+        layout.addWidget(info_box)
+        
+        # URL Input
+        url_group = QFrame()
+        url_group.setStyleSheet("""
+            QFrame {
+                background-color: #F8FAFC;
+                border: 1px solid #E2E8F0;
+                border-radius: 8px;
+                padding: 16px;
+            }
+        """)
+        url_layout = QVBoxLayout(url_group)
+        
+        url_label = QLabel("🔗 Link YouTube:")
+        url_label.setStyleSheet("font-weight: 600; color: #475569;")
+        url_layout.addWidget(url_label)
+        
+        self.url_input = QLineEdit()
+        self.url_input.setPlaceholderText("https://www.youtube.com/watch?v=... hoặc https://youtu.be/...")
+        self.url_input.setStyleSheet("""
+            QLineEdit {
+                padding: 12px;
+                border: 2px solid #E2E8F0;
+                border-radius: 8px;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border-color: #EF4444;
+            }
+        """)
+        url_layout.addWidget(self.url_input)
+        
+        # Custom prompt (optional)
+        prompt_label = QLabel("📝 Hướng dẫn tùy chỉnh (tùy chọn):")
+        prompt_label.setStyleSheet("font-weight: 600; color: #475569; margin-top: 12px;")
+        url_layout.addWidget(prompt_label)
+        
+        self.custom_prompt = QTextEdit()
+        self.custom_prompt.setPlaceholderText("Để trống để dùng hướng dẫn mặc định, hoặc nhập hướng dẫn riêng của bạn...\n\nVí dụ: 'Tóm tắt nội dung video này thành 5 điểm chính'")
+        self.custom_prompt.setMaximumHeight(80)
+        url_layout.addWidget(self.custom_prompt)
+        
+        layout.addWidget(url_group)
+        
+        # Buttons
+        btn_layout = QHBoxLayout()
+        
+        self.analyze_btn = QPushButton("🔍 Phân Tích Video")
+        self.analyze_btn.setCursor(Qt.PointingHandCursor)
+        self.analyze_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #EF4444, stop:1 #DC2626);
+                color: white;
+                padding: 14px 28px;
+                border-radius: 8px;
+                font-weight: 700;
+                font-size: 15px;
+                border: none;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #DC2626, stop:1 #B91C1C);
+            }
+            QPushButton:disabled {
+                background: #94A3B8;
+            }
+        """)
+        self.analyze_btn.clicked.connect(self.analyze_video)
+        btn_layout.addWidget(self.analyze_btn)
+        
+        self.copy_btn = QPushButton("📋 Copy Kết Quả")
+        self.copy_btn.setCursor(Qt.PointingHandCursor)
+        self.copy_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #10B981, stop:1 #059669);
+                color: white;
+                padding: 14px 28px;
+                border-radius: 8px;
+                font-weight: 600;
+                font-size: 14px;
+                border: none;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #059669, stop:1 #047857);
+            }
+        """)
+        self.copy_btn.clicked.connect(self.copy_result)
+        btn_layout.addWidget(self.copy_btn)
+        
+        btn_layout.addStretch()
+        layout.addLayout(btn_layout)
+        
+        # Output section
+        output_label = QLabel("📋 Kết Quả Phân Tích:")
+        output_label.setStyleSheet("font-weight: 600; color: #475569; font-size: 14px;")
+        layout.addWidget(output_label)
+        
+        self.output_text = QTextEdit()
+        self.output_text.setReadOnly(True)
+        self.output_text.setPlaceholderText("Kết quả phân tích sẽ hiển thị ở đây...")
+        self.output_text.setStyleSheet("""
+            QTextEdit {
+                background-color: #F8FAFC;
+                border: 2px solid #E2E8F0;
+                border-radius: 8px;
+                padding: 12px;
+                font-size: 13px;
+                line-height: 1.6;
+            }
+        """)
+        layout.addWidget(self.output_text)
+        
+        # Status
+        self.status_label = QLabel("")
+        self.status_label.setStyleSheet("color: #64748B; font-size: 12px;")
+        layout.addWidget(self.status_label)
+        
+        self.setLayout(layout)
+    
+    def validate_youtube_url(self, url):
+        """Validate YouTube URL format"""
+        # Patterns hỗ trợ nhiều định dạng YouTube URL hơn
+        patterns = [
+            r'(https?://)?(www\.)?youtube\.com/watch\?v=[\w_-]+',  # Standard watch URL
+            r'(https?://)?(www\.)?youtube\.com/watch\?.*v=[\w_-]+',  # Watch URL với params khác
+            r'(https?://)?(www\.)?youtu\.be/[\w_-]+',  # Short URL
+            r'(https?://)?(www\.)?youtube\.com/shorts/[\w_-]+',  # Shorts
+            r'(https?://)?(www\.)?youtube\.com/embed/[\w_-]+',  # Embed URL
+            r'(https?://)?(www\.)?youtube\.com/v/[\w_-]+',  # Old embed format
+        ]
+        for pattern in patterns:
+            if re.match(pattern, url):
+                return True
+        return False
+    
+    def analyze_video(self):
+        url = self.url_input.text().strip()
+        
+        if not url:
+            QMessageBox.warning(self, "Thiếu Link", "Vui lòng nhập link video YouTube!")
+            return
+        
+        if not self.validate_youtube_url(url):
+            QMessageBox.warning(self, "Link Không Hợp Lệ", "Link YouTube không đúng định dạng!\n\nVí dụ hợp lệ:\n- https://www.youtube.com/watch?v=xxxxx\n- https://youtu.be/xxxxx")
+            return
+        
+        # Check API key
+        if not GeminiAPIManager.get_api_key():
+            QMessageBox.warning(self, "Thiếu API Key", "Vui lòng cài đặt Gemini API Key trước!\nVào tab 'Cài Đặt API' để nhập key.")
+            return
+        
+        # Get custom prompt if provided
+        custom_prompt = self.custom_prompt.toPlainText().strip()
+        
+        # Update UI
+        self.analyze_btn.setEnabled(False)
+        self.status_label.setText("⏳ Đang phân tích video... (có thể mất 1-2 phút)")
+        self.status_label.setStyleSheet("color: #3B82F6; font-size: 12px;")
+        self.output_text.setPlainText("")
+        QApplication.processEvents()
+        
+        # Start worker thread
+        self.worker = GeminiWorker("analyze_youtube", youtube_url=url, prompt=custom_prompt)
+        self.worker.finished.connect(self.on_analysis_complete)
+        self.worker.start()
+    
+    def on_analysis_complete(self, result, error):
+        self.analyze_btn.setEnabled(True)
+        
+        if error:
+            self.status_label.setText(f"❌ Lỗi: {error}")
+            self.status_label.setStyleSheet("color: #DC2626; font-size: 12px;")
+            QMessageBox.warning(self, "Lỗi", error)
+        else:
+            self.output_text.setPlainText(result)
+            lines = len(result.strip().split('\n'))
+            self.status_label.setText(f"✅ Phân tích hoàn tất! Đã tạo {lines} kịch bản.")
+            self.status_label.setStyleSheet("color: #10B981; font-size: 12px;")
+    
+    def copy_result(self):
+        text = self.output_text.toPlainText()
+        if text:
+            QApplication.clipboard().setText(text)
+            self.status_label.setText("📋 Đã copy vào clipboard!")
+            self.status_label.setStyleSheet("color: #10B981; font-size: 12px;")
+        else:
+            QMessageBox.information(self, "Thông báo", "Chưa có kết quả để copy!")
+
 
 class SuperSyncTab(QWidget):
     def __init__(self):
@@ -3323,6 +4153,12 @@ class AccountManager(QMainWindow):
         self.script_tab = ScriptWritingTab()
         self.tab_widget.addTab(self.script_tab, "📝 Kịch Bản")
         
+        self.youtube_tab = YouTubeAnalysisTab()
+        self.tab_widget.addTab(self.youtube_tab, "📺 YouTube")
+        
+        self.gemini_settings_tab = GeminiSettingsTab()
+        self.tab_widget.addTab(self.gemini_settings_tab, "🔑 API")
+        
         self.sync_tab = SuperSyncTab()
         self.tab_widget.addTab(self.sync_tab, "🔄 Đồng Bộ")
         
@@ -3500,9 +4336,10 @@ class AccountManager(QMainWindow):
         elif index == 1:
             self.result_table.set_mode("video")
 
-        is_account_tab = (index == 2)
-
-        if is_account_tab:
+        # Tabs không cần hiển thị panel phải: Tài Khoản (2), Kịch Bản (3), YouTube (4), API (5), Đồng Bộ (6)
+        hide_right_panel_tabs = [2, 3, 4, 5, 6]
+        
+        if index in hide_right_panel_tabs:
             if self.main_splitter.widget(1).isVisible():
                 if not self._saved_main_sizes:
                     self._saved_main_sizes = self.main_splitter.sizes()
@@ -3530,11 +4367,21 @@ class AccountManager(QMainWindow):
 
     def open_api_key_dialog(self):
         dialog = ApiKeyDialog(self)
+        # Pre-fill with existing key if available
+        existing_key = GeminiAPIManager.get_api_key()
+        if existing_key:
+            dialog.text_edit.setPlainText(existing_key)
+        
         if dialog.exec():
-            keys = dialog.text_edit.toPlainText()
+            keys = dialog.text_edit.toPlainText().strip()
             if keys:
-                # Tạm thời chỉ log ra, sau này bạn lưu vào biến config
-                self.log_widget.add_log(f"Đã lưu {len(keys.splitlines())} API Keys.", "success")
+                # Get the first key (one key per line)
+                first_key = keys.splitlines()[0].strip()
+                GeminiAPIManager.set_api_key(first_key)
+                # Update the settings tab if it exists
+                if hasattr(self, 'gemini_settings_tab'):
+                    self.gemini_settings_tab.api_key_input.setText(first_key)
+                self.log_widget.add_log("Đã lưu Gemini API Key.", "success")
  
     def create_right_panel(self):
         widget = QWidget()
@@ -5110,7 +5957,9 @@ class AccountManager(QMainWindow):
             'account_table_columns': self.account_tab.get_column_widths(),
             'main_splitter': main_sizes,
             'right_splitter': self.right_splitter.sizes() if hasattr(self, 'right_splitter') else None,
-            'accounts': self.account_tab.export_accounts()
+            'accounts': self.account_tab.export_accounts(),
+            'gemini_api_key': GeminiAPIManager.get_api_key(),
+            'gemini_model': GeminiAPIManager.get_model()
         }
 
         try:
@@ -5196,6 +6045,17 @@ class AccountManager(QMainWindow):
                     "Đã tải danh sách tài khoản từ cấu hình. Khuyến khích dán COOKIE MỚI trước khi chạy để tránh die.",
                     "warning"
                 )
+            # Load Gemini API settings
+            if 'gemini_api_key' in config and config['gemini_api_key']:
+                GeminiAPIManager.set_api_key(config['gemini_api_key'])
+                if hasattr(self, 'gemini_settings_tab'):
+                    self.gemini_settings_tab.api_key_input.setText(config['gemini_api_key'])
+            if 'gemini_model' in config and config['gemini_model']:
+                GeminiAPIManager.set_model(config['gemini_model'])
+                if hasattr(self, 'gemini_settings_tab'):
+                    idx = self.gemini_settings_tab.model_combo.findText(config['gemini_model'])
+                    if idx >= 0:
+                        self.gemini_settings_tab.model_combo.setCurrentIndex(idx)
             self.log_widget.add_log("Đã tải cấu hình từ file", "info")
         except Exception as e:
             self.log_widget.add_log(f"Lỗi tải cấu hình: {str(e)}", "warning")
