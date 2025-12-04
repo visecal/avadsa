@@ -8080,23 +8080,20 @@ class VideoGenerationTab(QWidget):
             for line in lines:
                 # Áp dụng style template nếu có
                 if style_template:
-                    # Thay thế placeholder [MÔ TẢ CẢNH] hoặc tương tự bằng prompt của user
-                    # Tìm các placeholder phổ biến trong templates
+                    # Tìm và thay thế placeholder có dạng [MÔ TẢ ...] bằng prompt của user
                     final_prompt = style_template
-                    placeholders = [
-                        "[MÔ TẢ CẢNH]", "[MÔ TẢ SẢN PHẨM]", "[MÔ TẢ ĐỊA ĐIỂM]",
-                        "[MÔ TẢ MÓN ĂN]", "[MÔ TẢ CHỦ ĐỀ]", "[MÔ TẢ NGÔI NHÀ]"
-                    ]
-                    replaced = False
-                    for placeholder in placeholders:
-                        if placeholder in final_prompt:
-                            final_prompt = final_prompt.replace(placeholder, line)
-                            replaced = True
-                            break
                     
-                    # Nếu không tìm thấy placeholder, nối prompt vào cuối template
-                    if not replaced:
-                        final_prompt = f"{style_template} {line}"
+                    # Tìm tất cả placeholder dạng [MÔ TẢ ...] hoặc [...] 
+                    placeholder_pattern = r'\[MÔ TẢ [^\]]+\]|\[[^\]]+\]'
+                    placeholders_found = re.findall(placeholder_pattern, final_prompt)
+                    
+                    if placeholders_found:
+                        # Thay thế placeholder đầu tiên tìm được bằng prompt của user
+                        final_prompt = final_prompt.replace(placeholders_found[0], line, 1)
+                    else:
+                        # Nếu không tìm thấy placeholder, thêm prompt vào đầu template với dấu chấm
+                        # Ví dụ: "A cat playing" + template -> "A cat playing. Pixar-style 3D animation..."
+                        final_prompt = f"{line}. {style_template}"
                 else:
                     final_prompt = line
                     
