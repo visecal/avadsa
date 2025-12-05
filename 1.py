@@ -3257,18 +3257,34 @@ class GeminiAPIManager:
     """Class quản lý API key và gọi Gemini API (sử dụng class methods)"""
     _api_key = ""
     _model = "gemini-2.5-flash"
-    _genai_module = None  # Cache the import
+    _google_search_enabled = False  # Bật/tắt Google Search grounding
+    _genai_module = None  # Cache the import (google-genai SDK mới)
+    _genai_types = None   # Cache types module
+    _legacy_genai_module = None  # Cache the legacy import (google-generativeai SDK cũ)
     
     @classmethod
     def _get_genai(cls):
-        """Lazy import và cache google.generativeai module"""
+        """Lazy import và cache google.genai module (SDK mới)"""
         if cls._genai_module is None:
             try:
-                import google.generativeai as genai
+                from google import genai
+                from google.genai import types
                 cls._genai_module = genai
+                cls._genai_types = types
+            except ImportError:
+                return None, None
+        return cls._genai_module, cls._genai_types
+    
+    @classmethod
+    def _get_legacy_genai(cls):
+        """Lazy import và cache google.generativeai module (SDK cũ - fallback)"""
+        if cls._legacy_genai_module is None:
+            try:
+                import google.generativeai as genai
+                cls._legacy_genai_module = genai
             except ImportError:
                 return None
-        return cls._genai_module
+        return cls._legacy_genai_module
     
     @classmethod
     def set_api_key(cls, key):
@@ -3287,19 +3303,58 @@ class GeminiAPIManager:
         return cls._model
     
     @classmethod
+    def set_google_search_enabled(cls, enabled):
+        """Bật/tắt tính năng Google Search grounding"""
+        cls._google_search_enabled = bool(enabled)
+    
+    @classmethod
+    def get_google_search_enabled(cls):
+        """Lấy trạng thái Google Search grounding"""
+        return cls._google_search_enabled
+    
+    @classmethod
     def call_gemini(cls, prompt, content=""):
-        """Gọi Gemini API để tạo nội dung"""
+        """Gọi Gemini API để tạo nội dung - hỗ trợ Google Search grounding"""
         if not cls._api_key:
             return None, "Chưa cài đặt API Key Gemini. Vui lòng vào tab Cài Đặt API để nhập key."
         
-        genai = cls._get_genai()
-        if genai is None:
-            return None, "Thư viện google-generativeai chưa được cài đặt. Vui lòng cài đặt bằng lệnh: pip install google-generativeai"
+        # Thử sử dụng SDK mới trước (google-genai)
+        genai, types = cls._get_genai()
+        
+        if genai is not None and types is not None:
+            # Sử dụng SDK mới với hỗ trợ Google Search
+            try:
+                client = genai.Client(api_key=cls._api_key)
+                
+                if content:
+                    full_prompt = f"{prompt}\n\n{content}"
+                else:
+                    full_prompt = prompt
+                
+                # Cấu hình với Google Search nếu được bật
+                generate_params = {
+                    'model': cls._model,
+                    'contents': full_prompt,
+                }
+                if cls._google_search_enabled:
+                    tools = [types.Tool(google_search=types.GoogleSearch())]
+                    config = types.GenerateContentConfig(tools=tools)
+                    generate_params['config'] = config
+                
+                response = client.models.generate_content(**generate_params)
+                return response.text, None
+            except Exception as e:
+                return None, f"Lỗi gọi Gemini API (SDK mới): {str(e)}"
+        
+        # Fallback sang SDK cũ (google-generativeai)
+        legacy_genai = cls._get_legacy_genai()
+        if legacy_genai is None:
+            return None, "Thư viện google-genai hoặc google-generativeai chưa được cài đặt. Vui lòng cài đặt bằng lệnh: pip install google-genai hoặc pip install google-generativeai"
         
         try:
-            genai.configure(api_key=cls._api_key)
+            legacy_genai.configure(api_key=cls._api_key)
             
-            model = genai.GenerativeModel(cls._model)
+            model = legacy_genai.GenerativeModel(cls._model)
             
             if content:
                 full_prompt = f"{prompt}\n\n{content}"
@@ -3317,24 +3372,47 @@ class GeminiAPIManager:
         if not cls._api_key:
             return None, "Chưa cài đặt API Key Gemini. Vui lòng vào tab Cài Đặt API để nhập key."
         
-        genai = cls._get_genai()
-        if genai is None:
-            return None, "Thư viện google-generativeai chưa được cài đặt. Vui lòng cài đặt bằng lệnh: pip install google-generativeai"
-        
-        try:
-            genai.configure(api_key=cls._api_key)
-            
-            model = genai.GenerativeModel(cls._model)
-            
-            default_prompt = """Hãy xem video này và tạo ra một kịch bản để tạo video AI có thể truyền tải đúng nội dung.
+        default_prompt = """Hãy xem video này và tạo ra một kịch bản để tạo video AI có thể truyền tải đúng nội dung.
 Chia thành các kịch bản theo thứ tự phù hợp với video 8 giây.
 Mỗi kịch bản là 1 dòng.
 Kết quả là văn bản thuần túy, KHÔNG thêm lời dẫn, chú thích, markdown, in đậm/in nghiêng."""
+        
+        full_prompt = prompt if prompt else default_prompt
+        
+        # Thử sử dụng SDK mới trước (google-genai)
+        genai, types = cls._get_genai()
+        
+        if genai is not None and types is not None:
+            try:
+                client = genai.Client(api_key=cls._api_key)
+                
+                # Cấu hình với Google Search nếu được bật
+                generate_params = {
+                    'model': cls._model,
+                    'contents': [youtube_url, full_prompt],
+                }
+                if cls._google_search_enabled:
+                    tools = [types.Tool(google_search=types.GoogleSearch())]
+                    config = types.GenerateContentConfig(tools=tools)
+                    generate_params['config'] = config
+                
+                response = client.models.generate_content(**generate_params)
+                return response.text, None
+            except Exception as e:
+                error_msg = str(e)
+                if "not supported" in error_msg.lower() or "invalid" in error_msg.lower():
+                    return None, f"Lỗi: Model {cls._model} có thể không hỗ trợ phân tích video trực tiếp. Thử đổi sang gemini-1.5-flash-latest hoặc gemini-1.5-pro-latest. Chi tiết: {error_msg}"
+                return None, f"Lỗi phân tích YouTube (SDK mới): {error_msg}"
+        
+        # Fallback sang SDK cũ (google-generativeai)
+        legacy_genai = cls._get_legacy_genai()
+        if legacy_genai is None:
+            return None, "Thư viện google-genai hoặc google-generativeai chưa được cài đặt. Vui lòng cài đặt bằng lệnh: pip install google-genai hoặc pip install google-generativeai"
+        
+        try:
+            legacy_genai.configure(api_key=cls._api_key)
             
-            if prompt:
-                full_prompt = prompt
-            else:
-                full_prompt = default_prompt
+            model = legacy_genai.GenerativeModel(cls._model)
             
             # Gemini 1.5+ có thể xử lý YouTube URLs trực tiếp
             # Gửi URL như một phần của content
@@ -3495,6 +3573,47 @@ class GeminiSettingsTab(QWidget):
         
         layout.addWidget(model_group)
         
+        # Google Search grounding option
+        search_group = QFrame()
+        search_group.setStyleSheet("""
+            QFrame {
+                background-color: #FEF3C7;
+                border: 1px solid #FCD34D;
+                border-radius: 8px;
+                padding: 16px;
+            }
+        """)
+        search_layout = QVBoxLayout(search_group)
+        
+        search_label = QLabel("🔍 Google Search Grounding:")
+        search_label.setStyleSheet("font-weight: 600; color: #92400E;")
+        search_layout.addWidget(search_label)
+        
+        self.google_search_check = QCheckBox("Bật tính năng tìm kiếm Google")
+        self.google_search_check.setStyleSheet("""
+            QCheckBox {
+                font-size: 14px;
+                color: #78350F;
+                padding: 8px;
+            }
+            QCheckBox::indicator {
+                width: 20px;
+                height: 20px;
+            }
+        """)
+        search_layout.addWidget(self.google_search_check)
+        
+        search_info = QLabel("""
+            <b>Khi bật:</b> AI sẽ tìm kiếm Google để có thông tin mới nhất và chính xác hơn.<br>
+            <b>Lưu ý:</b> Cần cài đặt thư viện <code>google-genai</code> (SDK mới) thay vì <code>google-generativeai</code>.<br>
+            📌 Cài đặt: <code>pip install google-genai</code>
+        """)
+        search_info.setWordWrap(True)
+        search_info.setStyleSheet("color: #92400E; font-size: 12px;")
+        search_layout.addWidget(search_info)
+        
+        layout.addWidget(search_group)
+        
         # Buttons
         btn_layout = QHBoxLayout()
         
@@ -3567,6 +3686,7 @@ class GeminiSettingsTab(QWidget):
         
         GeminiAPIManager.set_api_key(api_key)
         GeminiAPIManager.set_model(model)
+        GeminiAPIManager.set_google_search_enabled(self.google_search_check.isChecked())
         
         self.status_label.setText("✅ Đã lưu cài đặt thành công!")
         self.status_label.setStyleSheet("color: #10B981; font-size: 13px; padding: 8px;")
@@ -3575,6 +3695,7 @@ class GeminiSettingsTab(QWidget):
         # Load from GeminiAPIManager
         api_key = GeminiAPIManager.get_api_key()
         model = GeminiAPIManager.get_model()
+        google_search = GeminiAPIManager.get_google_search_enabled()
         
         if api_key:
             self.api_key_input.setText(api_key)
@@ -3582,6 +3703,8 @@ class GeminiSettingsTab(QWidget):
         index = self.model_combo.findText(model)
         if index >= 0:
             self.model_combo.setCurrentIndex(index)
+        
+        self.google_search_check.setChecked(google_search)
     
     def test_api_key(self):
         api_key = self.api_key_input.text().strip()
@@ -6206,7 +6329,8 @@ class AccountManager(QMainWindow):
             'right_splitter': self.right_splitter.sizes() if hasattr(self, 'right_splitter') else None,
             'accounts': self.account_tab.export_accounts(),
             'gemini_api_key': GeminiAPIManager.get_api_key(),
-            'gemini_model': GeminiAPIManager.get_model()
+            'gemini_model': GeminiAPIManager.get_model(),
+            'gemini_google_search': GeminiAPIManager.get_google_search_enabled()
         }
 
         try:
@@ -6305,6 +6429,10 @@ class AccountManager(QMainWindow):
                     idx = self.gemini_settings_tab.model_combo.findText(config['gemini_model'])
                     if idx >= 0:
                         self.gemini_settings_tab.model_combo.setCurrentIndex(idx)
+            if 'gemini_google_search' in config:
+                GeminiAPIManager.set_google_search_enabled(config['gemini_google_search'])
+                if hasattr(self, 'gemini_settings_tab'):
+                    self.gemini_settings_tab.google_search_check.setChecked(config['gemini_google_search'])
             self.log_widget.add_log("Đã tải cấu hình từ file", "info")
         except Exception as e:
             self.log_widget.add_log(f"Lỗi tải cấu hình: {str(e)}", "warning")
