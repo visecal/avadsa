@@ -3332,18 +3332,16 @@ class GeminiAPIManager:
                     full_prompt = prompt
                 
                 # Cấu hình với Google Search nếu được bật
-                config_params = {}
+                generate_params = {
+                    'model': cls._model,
+                    'contents': full_prompt,
+                }
                 if cls._google_search_enabled:
                     tools = [types.Tool(google_search=types.GoogleSearch())]
-                    config_params['tools'] = tools
+                    config = types.GenerateContentConfig(tools=tools)
+                    generate_params['config'] = config
                 
-                config = types.GenerateContentConfig(**config_params) if config_params else None
-                
-                response = client.models.generate_content(
-                    model=cls._model,
-                    contents=full_prompt,
-                    config=config
-                )
+                response = client.models.generate_content(**generate_params)
                 return response.text, None
             except Exception as e:
                 return None, f"Lỗi gọi Gemini API (SDK mới): {str(e)}"
@@ -3389,18 +3387,16 @@ Kết quả là văn bản thuần túy, KHÔNG thêm lời dẫn, chú thích, 
                 client = genai.Client(api_key=cls._api_key)
                 
                 # Cấu hình với Google Search nếu được bật
-                config_params = {}
+                generate_params = {
+                    'model': cls._model,
+                    'contents': [youtube_url, full_prompt],
+                }
                 if cls._google_search_enabled:
                     tools = [types.Tool(google_search=types.GoogleSearch())]
-                    config_params['tools'] = tools
+                    config = types.GenerateContentConfig(tools=tools)
+                    generate_params['config'] = config
                 
-                config = types.GenerateContentConfig(**config_params) if config_params else None
-                
-                response = client.models.generate_content(
-                    model=cls._model,
-                    contents=[youtube_url, full_prompt],
-                    config=config
-                )
+                response = client.models.generate_content(**generate_params)
                 return response.text, None
             except Exception as e:
                 error_msg = str(e)
